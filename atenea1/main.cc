@@ -5,6 +5,12 @@
 
 int main(){
 
+    struct TRIPLET {
+        char paraula;
+        int longitud;
+        int codi;
+    };
+
     //hardcodejem les codificacioficacions pq em fa tota la mandra lidiar amb com std::cin tracta els espais i caracters especials
     std::string codificacioPla;
     std::vector <std::string> codificaciosPlas{ 
@@ -29,7 +35,7 @@ int main(){
     std::cin >> cas;
     codificacioPla = codificaciosPlas[cas % codificaciosPlas.size()];
 
-    std::vector <std::pair <char, int>> vecParelles; 
+    std::vector <TRIPLET> vecTriplets; 
 
     //passem la codificacio a un format amb que pugui treballar
     //sense detecció d'error. Ho sento profe. T'estimo molt <3
@@ -58,7 +64,7 @@ int main(){
                 num = num * 10 + actual - '0';
             }
             else if (actual == ')'){
-                vecParelles.push_back(std::pair <char, int> {caracter, num});
+                vecTriplets.push_back(TRIPLET {caracter, num});
                 llargariaMax = std::max(llargariaMax, num);
                 num = 0;
                 fase = 0;
@@ -68,8 +74,8 @@ int main(){
     }
 
     std::vector<int> blCount(llargariaMax + 1, 0);
-    for (int i = 0; i < vecParelles.size(); ++i){
-        blCount[vecParelles[i].second]++;
+    for (int i = 0; i < vecTriplets.size(); ++i){
+        blCount[vecTriplets[i].longitud]++;
     }
 
     std::vector<int> properCodi(llargariaMax, 0);
@@ -79,11 +85,11 @@ int main(){
         properCodi[i] = codi;
     }
 
-    for (int i = 0; i < vecParelles.size(); ++i){
-        vecParelles[i].second = properCodi[vecParelles[i].second]++;
+    for (int i = 0; i < vecTriplets.size(); ++i){
+        vecTriplets[i].codi = properCodi[vecTriplets[i].longitud]++;
     }
 
-    for (int i = 0; i < vecParelles.size(); ++i) std::cout << vecParelles[i].first << " - " <<  vecParelles[i].second << " - " << std::bitset<8>(vecParelles[i].second) << std::endl; 
+    //for (int i = 0; i < vecTriplets.size(); ++i) std::cout << vecTriplets[i].paraula << " - " <<  vecTriplets[i].longitud << " - " << std::bitset<11>(vecTriplets[i].codi) << std::endl; 
 
     if (cas < textosPla.size()){
         // de texte pla a binari
@@ -91,17 +97,19 @@ int main(){
     else{
         // de binari a texte pla
         cas = (cas - textosPla.size()) % codisPla.size();
-        for (int i = 0, numero = 0; i < codisPla[cas].size(); ++i){
+        for (int i = 0, numero = 0, longitud = 0; i < codisPla[cas].size(); ++i){
             numero *= 2;
             if (codisPla[cas][i] == '1') numero++;
+            longitud++;
 
-            std::cout << std::bitset<8>(numero);
+            //std::cout << std::bitset<8>(numero) << std::endl;
 
-            for (int j = 0; j < vecParelles.size(); ++j){
-                if (numero == vecParelles[j].second){
-                    //std::cout << vecParelles[j].first;
-                    std::cout << "<" << vecParelles[j].first << ">" << std::endl;
+            for (int j = 0; j < vecTriplets.size(); ++j){
+                if (numero == vecTriplets[j].codi and longitud == vecTriplets[j].longitud){
+                    std::cout << vecTriplets[j].paraula;
+                    //std::cout << "<" << vecTriplets[j].paraula << ">" << std::endl;
                     numero = 0;
+                    longitud = 0;
                     break;
                 }
             }
