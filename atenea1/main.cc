@@ -16,13 +16,15 @@ int main(){
     std::vector <std::string> codificaciosPlas{ 
         "[(' ', 2), (\"'\", 10), (',', 7), ('-', 6), ('.', 6), (';', 10), ('?', 9), ('A', 10), ('B', 9), ('D', 10), ('G', 10), ('H', 9), ('I', 7), ('K', 9), ('M', 9), ('T', 7), ('W', 8), ('[', 10), (']', 11), ('a', 4), ('b', 7), ('c', 6), ('d', 5), ('e', 3), ('f', 6), ('g', 8), ('h', 4), ('i', 6), ('j', 11), ('k', 8), ('l', 5), ('m', 6), ('n', 5), ('o', 4), ('p', 6), ('q', 10), ('r', 5), ('s', 5), ('t', 4), ('u', 6), ('v', 9), ('w', 6), ('y', 6)]",
         "[(' ', 2), (\"'\", 8), (',', 6), ('-', 8), ('.', 5), (';', 9), ('?', 8), ('A', 9), ('B', 8), ('C', 9), ('D', 9), ('F', 9), ('G', 9), ('H', 8), ('I', 6), ('M', 8), ('P', 9), ('S', 8), ('T', 9), ('W', 8), ('Y', 10), ('[', 10), (']', 9), ('a', 4), ('b', 7), ('c', 6), ('d', 5), ('e', 4), ('f', 6), ('g', 7), ('h', 5), ('i', 5), ('k', 7), ('l', 5), ('m', 5), ('n', 5), ('o', 5), ('p', 6), ('r', 4), ('s', 5), ('t', 4), ('u', 5), ('v', 8), ('w', 6), ('y', 6)]",
+        "[('A', 3), ('B', 3), ('C', 3), ('D', 3), ('E', 3), ('F', 2), ('G', 4), ('H', 4), ]",
         "[(' ', 3), ('!', 8), (\"'\", 8), (',', 6), ('-', 8), ('.', 6), (';', 9), ('?', 9), ('A', 9), ('D', 9), ('E', 9), ('G', 8), ('H', 9), ('I', 6), ('M', 7), ('N', 8), ('O', 8), ('R', 9), ('T', 8), ('W', 8), ('Y', 9), ('[', 10), (']', 10), ('a', 4), ('b', 6), ('c', 6), ('d', 5), ('e', 4), ('f', 6), ('g', 6), ('h', 5), ('i', 4), ('j', 9), ('k', 6), ('l', 5), ('m', 5), ('n', 4), ('o', 4), ('p', 7), ('q', 8), ('r', 5), ('s', 4), ('t', 4), ('u', 5), ('v', 7), ('w', 5), ('y', 6)]",
         "[(' ', 2), (',', 6), ('-', 8), ('.', 6), (';', 10), ('C', 10), ('D', 10), ('G', 10), ('H', 10), ('I', 7), ('M', 10), ('N', 10), ('T', 8), ('W', 10), ('[', 10), (']', 10), ('a', 4), ('b', 7), ('c', 6), ('d', 5), ('e', 3), ('f', 6), ('g', 7), ('h', 5), ('i', 5), ('j', 9), ('k', 7), ('l', 5), ('m', 6), ('n', 4), ('o', 4), ('p', 6), ('r', 5), ('s', 5), ('t', 4), ('u', 6), ('v', 8), ('w', 6), ('y', 7)]",
         "[('A', 3), ('B', 3), ('C', 3), ('D', 3), ('E', 3), ('F', 2), ('G', 4), ('H', 4), ]"
     };
     std::vector <std::string> textosPla{
         "The Island of Doctor Moreau, by H. G. Wells [...] But I mean to do better things still. I mean to conquer that. This puma-- But that's the story. All the Kanaka boys are dead now; one fell overboard of the launch, and one died of a wounded heel that he poisoned in some way with plant-juice. Three went away in the yacht, and I suppose and hope were drowned. The other one--was killed. Well, I have replaced them. Montgomery went on much as you are disposed to do at first, and then-- What became of the other one? said I, sharply,--the other Kanaka who was killed? The fact is, after I had made a number of human creatures I made a Thing-- He hesitated.",
-        "The Island of Doctor Moreau, by H. G. Wells [...] Still, I could hardly tell the man that I thought him a liar. Pointed, I said; rather small and furry,--distinctly furry. But the whole man is one of the strangest beings I ever set eyes on. A sharp, hoarse cry of animal pain came from the enclosure behind us. Its depth and volume testified to the puma. I saw Montgomery wince. Yes? he said. Where did you pick up the creature? San Francisco. He's an ugly brute, I admit. Half-witted, you know. Can't remember where he came from. But I'm used to him, you know."
+        "The Island of Doctor Moreau, by H. G. Wells [...] Still, I could hardly tell the man that I thought him a liar. Pointed, I said; rather small and furry,--distinctly furry. But the whole man is one of the strangest beings I ever set eyes on. A sharp, hoarse cry of animal pain came from the enclosure behind us. Its depth and volume testified to the puma. I saw Montgomery wince. Yes? he said. Where did you pick up the creature? San Francisco. He's an ugly brute, I admit. Half-witted, you know. Can't remember where he came from. But I'm used to him, you know.",
+        "ABCDEFGH"
     };
     std::vector <std::string> codisPla{
         "111110001001100110001101000111101000010010110010000011011011100011111100101101101101000011010110000111011001101011000110010101111100100001101011110100001111110111100110001111010111001100011111001001110100101000111000111111111011001111001111001111111111110001110110111101111111011011111000111101011111011111101101111110101111111001111111010000100010110000011101101011010111111011110000011100100001010111101000010000010010111100010100001100001101101110001010111101001111000010011011101001101100010100001000110010100000100101100100000111101110111111011101001101100100011001010000010110101011010111100000001100101001100001101111001111011010100011011011011100111001000000100101100100001001101000111000111000101100110100000110111111110101011100110000010100010000011010110010001001011000000110111011010100101000110110000011100100001001101001010100011000010010001001100000100001000101100010111010000110101001100101011001000101111000000110101101100011001010010110010000011101101010100110001001100111011011010101110000010010110010000011010001001100111011000000110010100000101101011010000110111110010000001000011011110100001001111110010000110110111000110001001101000111111001001111101011001000000100001111111101011111100000001101101110001100000101000001110110110010000001001011001000010001001110110001100110001110001010000100111011100110111000001001011001000011100101010100111100000110111110011000110100000111000101000010010111011000111001000000100111111001001001011101100011000001010000001000100110100011100001111000101100010010111100000110001101101011000110010100010111101100011110010000001001011001000011011101101011101011001000010011010010101000110000010100011011010011010001011110000001010100110001100001001000100110001001101000111000111110101011100110011101101100100001011000110111100010100001101110111000001111101000110111110011000111011001100101100011100001101010100111011011101000001110010010010010000100110011000110000110101111010010010000101001011101011101101001100011000010010001001100010101001111001000011010110111100000010001001100101000000111011001101011000110010101110001100000100111000100001100110000111011110110001101101101101101101011111101110100001110010000110000100100010011000011101101010100110001100001101011011100100010000110000110110011010101001111001100011101100110101100011001010111111100100000111001001001001000011010011001100011010000011100101010110110000001000100110010100000001010010101010011110011000111110001001100110001001000111111000010010100000111010011010111000100100110111100100000111001001001001000010011001111001100011111001100110010100000000100101000001001110111000110100000110000010011100010000110000101010011010110000100011001010000100100000010000110000111010011010111111100100001101000001010101001110001001110000001001100101111000001100010001001101101011111100010011100011001100011111100001011110101001101101100011001000001001000000110000100101001010000011100001001111000001100011101001101011100000100101000010001011110011010001000101111000000011011011100001101011110110111101001111010010101111010011110000011101100100001101111100110001111100110011010001111110010011111010111110111000111101100110110010000100010011001001011110010111111110110000110100111100111010100000100101000001011010101111000001001000101001110110110011",
@@ -31,10 +33,13 @@ int main(){
     };
 
     //escollim quin exercici volem fer (0..3)
+    std::cout << "Escriu un número del 0 al " << codificaciosPlas.size() << " per executar el codi." <<std::endl;
     int cas;
     std::cin >> cas;
     codificacioPla = codificaciosPlas[cas % codificaciosPlas.size()];
 
+    //Tots els codis van dins un vector que recorrem de forma lineal. Ineficient? Sí.
+    //Però ho vaig fer sense pensar perque això haurà de córrer només 4 cops en tota sa vida.
     std::vector <TRIPLET> vecTriplets; 
 
     //passem la codificacio a un format amb que pugui treballar
@@ -73,11 +78,13 @@ int main(){
         }
     }
 
+    //Calculem quants elements hi ha per cada longitud de codi
     std::vector<int> blCount(llargariaMax + 1, 0);
     for (int i = 0; i < vecTriplets.size(); ++i){
         blCount[vecTriplets[i].longitud]++;
     }
 
+    //Calculem la forma numèrica del primer codi per a cada llargaria
     std::vector<int> properCodi(llargariaMax, 0);
     int codi = 0;
     for (int i = 1; i <= llargariaMax; ++i){
@@ -85,29 +92,43 @@ int main(){
         properCodi[i] = codi;
     }
 
+    //A partir del pas anterior, anem sumant un a un per obtenir el codi de cada paraula
     for (int i = 0; i < vecTriplets.size(); ++i){
         vecTriplets[i].codi = properCodi[vecTriplets[i].longitud]++;
     }
 
-    //for (int i = 0; i < vecTriplets.size(); ++i) std::cout << vecTriplets[i].paraula << " - " <<  vecTriplets[i].longitud << " - " << std::bitset<11>(vecTriplets[i].codi) << std::endl; 
-
     if (cas < textosPla.size()){
         // de texte pla a binari
+        for (int i = 0; i < textosPla[cas].size(); ++i){
+            for (int j = 0; j < vecTriplets.size(); ++j){
+                
+                if (textosPla[cas][i] == vecTriplets[j].paraula){
+                    int mascara = 1 << vecTriplets[j].longitud-1;
+                    while (mascara > 0){
+                        if (vecTriplets[j].codi & mascara) std::cout << '1';
+                        else std::cout << '0';
+                        mascara >>= 1;
+                    }
+                    break;
+                }
+                
+            }
+        }
+        std::cout << std::endl;
     }
     else{
         // de binari a texte pla
         cas = (cas - textosPla.size()) % codisPla.size();
         for (int i = 0, numero = 0, longitud = 0; i < codisPla[cas].size(); ++i){
+            //expandim el codi de binari a numèric
             numero *= 2;
             if (codisPla[cas][i] == '1') numero++;
             longitud++;
 
-            //std::cout << std::bitset<8>(numero) << std::endl;
-
+            //Comprovem si hi ha cap paraula que tingui codi de mateix valor i llargària com el que estem analitzant ara mateix
             for (int j = 0; j < vecTriplets.size(); ++j){
                 if (numero == vecTriplets[j].codi and longitud == vecTriplets[j].longitud){
                     std::cout << vecTriplets[j].paraula;
-                    //std::cout << "<" << vecTriplets[j].paraula << ">" << std::endl;
                     numero = 0;
                     longitud = 0;
                     break;
