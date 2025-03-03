@@ -111,27 +111,24 @@ int main(){
 
     while (i < codi.size()){
     //    if (fraccio < 5000 && fraccio > -1)std::cout << fraccio << std::endl;
-        if (cotaMaxAct < meitat){
-            //E0
-            std::cout << "E0: i: " << i << " - CotaMinAct: " << cotaMinAct << " - fraccio: " << fraccio << " - CotaMaxAct: " << cotaMaxAct << std::endl;
+        if (cotaMaxAct <= meitat){
+            //E1
             cotaMinAct = cotaMinAct * 2;
             cotaMaxAct = cotaMaxAct * 2;
             fraccio = fraccio * 2;
             if (codi[i] == '1') ++fraccio;
             ++i;
         }
-        else if (cotaMinAct > meitat){
-            //E1
-            std::cout << "E1: i: " << i << " - CotaMinAct: " << cotaMinAct << " - fraccio: " << fraccio << " - CotaMaxAct: " << cotaMaxAct << std::endl;
+        else if (cotaMinAct >= meitat){
+            //E2
             cotaMinAct = cotaMinAct * 2 - cotaMax;
             cotaMaxAct = cotaMaxAct * 2 - cotaMax;
             fraccio = fraccio * 2 - cotaMax;
             if (codi[i] == '1') ++fraccio;
             ++i;
         }
-        else if (cotaMinAct > quart && cotaMaxAct < tresquart){
-            //E2
-            std::cout << "E2: i: " << i << " - CotaMinAct: " << cotaMinAct << " - fraccio: " << fraccio << " - CotaMaxAct: " << cotaMaxAct << std::endl;
+        else if (cotaMinAct >= quart && cotaMaxAct <= tresquart){
+            //E3
             cotaMinAct = cotaMinAct * 2 - meitat;
             cotaMaxAct = cotaMaxAct * 2 - meitat;
             fraccio = fraccio * 2 - meitat;
@@ -146,11 +143,7 @@ int main(){
             int j = 0;
             for (; j < vectorActual.size() && fraccio >= vectorActual[j+1].second; ++j);
             missatge.push_back(vectorActual[j].first);
-            
-            std::cout << std::endl << "HIT: i: " << i << " - CotaMinAct: " << cotaMinAct << " - fraccio: " << fraccio << " - CotaMaxAct: " << cotaMaxAct << std::endl;
-            for (int i = 0; i < vectorActual.size(); ++i)   std::cout << vectorActual[i].first << " - " << vectorActual[i].second << std::endl;
-            std::cout << "lletra: " << vectorActual[j].first << std::endl << "missatge: " << missatge << std::endl;
-            
+           
             cotaMinAct = vectorActual[j].second;
             cotaMaxAct = vectorActual[j+1].second;
         }
