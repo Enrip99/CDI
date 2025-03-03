@@ -88,4 +88,6 @@ int main(){
 
     std::string missatge;
 
+    
+
 }
