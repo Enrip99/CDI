@@ -1,0 +1,4 @@
+Hola profe!!!!
+
+Aquest projecte el vaig fer quadrimestre passat per l'assignatura de TCI, un compressor i descompressor de huffman, tant normal com adaptatiu, perfectament funcional i lent.
+Aquest codi és una mica brut pq l'he adaptat una mica pq m'escrigui el que necessitava pel questionari d'atenea.
