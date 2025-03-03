@@ -78,4 +78,14 @@ int main(){
         }
     }
 
+    int cotaMax = pow2roundup(total * 4);
+    int index = cotaMax;
+
+    vecStruct vectorActual = recalcularCotes(decodificador, 0, cotaMax, total);
+    int cotaMinAct = 0, cotaMaxAct = cotaMax;
+
+    int quart = cotaMax/4, meitat = cotaMax/2, tresquart = quart + meitat;
+
+    std::string missatge;
+
 }
