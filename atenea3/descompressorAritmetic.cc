@@ -142,7 +142,7 @@ int main(){
             vectorActual = recalcularCotes(decodificador, cotaMinAct, cotaMaxAct, total);
             //....
             int j = 0;
-            for (; j < vectorActual.size() && fraccio < vectorActual[j+1].second; ++j);
+            for (; j < vectorActual.size() && fraccio > vectorActual[j+1].second; ++j);
             //std::cout << j << " - " << vectorActual[j].first << std::endl;
             missatge.push_back(vectorActual[j].first);
             cotaMinAct = vectorActual[j].second;
