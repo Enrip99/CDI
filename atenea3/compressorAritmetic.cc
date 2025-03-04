@@ -162,5 +162,6 @@ int main(){
         }
     }
     std::cout << codi << std::endl;
+    std::cout << codi.substr(0,1000) << std::endl;
 
 }
