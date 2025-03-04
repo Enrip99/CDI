@@ -5,6 +5,13 @@
 #define parStruct std::pair <char, int>
 #define vecStruct std::vector <parStruct>
 
+int cercaBinaria (vecStruct & vec, int primer, int ultim, char objectiu){
+    int mig = (primer + ultim) / 2;
+    if (objectiu > vec[mig].first) return cercaBinaria(vec, mig+1, ultim, objectiu);
+    if (objectiu < vec[mig].first) return cercaBinaria(vec, primer, mig-1, objectiu);
+    return mig;
+}
+
 int pow2roundup (int x) {
     x |= x >> 1;
     x |= x >> 2;
@@ -36,6 +43,7 @@ int main(){
     std::getline(std::cin,frequencies);
     std::cout << "Escriu la longitud:" << std::endl;
     std::cin >> longitud;
+
 
     vecStruct decodificador;
 
@@ -79,15 +87,80 @@ int main(){
     }
 
     int cotaMax = pow2roundup(total * 4);
-    int index = cotaMax;
+    int index = cotaMax, bitsPerNum = 0;
+    while (index >>= 1) ++bitsPerNum;
 
-    vecStruct vectorActual = recalcularCotes(decodificador, 0, cotaMax, total);
+    //vecStruct vectorActual = recalcularCotes(decodificador, 0, cotaMax, total);
+    vecStruct vectorActual;
     int cotaMinAct = 0, cotaMaxAct = cotaMax;
 
     int quart = cotaMax/4, meitat = cotaMax/2, tresquart = quart + meitat;
+    int i = 0, holds = 0;
+    bool  done = false;
+    std::string codi;
 
-    std::string missatge;
+    while (not done){
+        if (cotaMaxAct <= meitat){
+            //E1
+            cotaMinAct = cotaMinAct * 2;
+            cotaMaxAct = cotaMaxAct * 2;
+            codi += '0';
+            while (holds){
+                codi += '1';
+                --holds;
+            }
+        }
+        else if (cotaMinAct >= meitat){
+            //E2
+            cotaMinAct = cotaMinAct * 2 - cotaMax;
+            cotaMaxAct = cotaMaxAct * 2 - cotaMax;
+            codi += '1';
+            while (holds){
+                codi += '0';
+                --holds;
+            }
+        }
+        else if (cotaMinAct >= quart && cotaMaxAct <= tresquart){
+            //E3
+            cotaMinAct = cotaMinAct * 2 - meitat;
+            cotaMaxAct = cotaMaxAct * 2 - meitat;
+            ++holds;
+        }
+        else{
+            if (i == longitud){
+                //FI
+                if (cotaMinAct <= quart){
+                    codi += "01";
+                    while (holds){
+                        codi += '1';
+                        --holds;
+                    }
+                }
+                else{
+                    codi += "10";
+                    while (holds){
+                        codi += '0';
+                        --holds;
+                    }
+                }
+                done = true;
+                while (cotaMax >>= 1){
+                    if (cotaMinAct & cotaMax) codi += '1';
+                    else codi += '0';
+                }
+            }
+            else{
+                //HIT
+                vectorActual = recalcularCotes(decodificador, cotaMinAct, cotaMaxAct, total);
+                //....
+                int pos = cercaBinaria(vectorActual, 0, vectorActual.size() - 1, missatge[i]);
+                cotaMinAct = vectorActual[pos].second;
+                cotaMaxAct = vectorActual[pos+1].second;
+                ++i;
 
-    
+            }
+        }
+    }
+    std::cout << codi;
 
 }

@@ -88,7 +88,7 @@ int main(){
     int index = cotaMax, bitsPerNum = 0;
     while (index >>= 1) ++bitsPerNum;
 
-    vecStruct vectorActual = recalcularCotes(decodificador, 0, cotaMax, total);
+    vecStruct vectorActual;
     int cotaMinAct = 0, cotaMaxAct = cotaMax;
 
     /*for (int i = 0; i < vectorActual.size(); ++i){
