@@ -161,6 +161,6 @@ int main(){
             }
         }
     }
-    std::cout << codi;
+    std::cout << codi << std::endl;
 
 }
