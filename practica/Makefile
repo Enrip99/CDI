@@ -42,7 +42,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 
 .PHONY: clean
 clean:
-	rm -f $(TARGET_EXEC) $(SRC_DIRS)/*.o $(SRC_DIRS)/*.d
+	rm -f $(TARGET_EXEC) $(SRC_DIRS)/*.o $(SRC_DIRS)/*.d *.knk
 
 # Include the .d makefiles. The - at the front suppresses the errors of missing
 # Makefiles. Initially, all the .d files will be missing, and we don't want those
