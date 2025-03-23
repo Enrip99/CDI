@@ -4,17 +4,104 @@
 #include <optional>
 #include <fstream>
 #include <stdio.h>
+#include <vector>
+#include <map>
+#include "BinTree.hpp"
+
+#define MAX_BLOC 32768
 
 FILE * fitxerSortida;
 u_int8_t byteActual;
-int bitsActuals;
+int bitsActuals, midaBloc;
+u_int8_t * bloc = new u_int8_t[MAX_BLOC];
 
-void escriuBit(bool bit){
+void longitudArbre(const BinTree<__uint8_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
+    if (arbre.left().empty()){
+        longitudsCodi[arbre.value()] = longitud;
+    }
+    else{
+        longitudArbre(arbre.left(), longitudsCodi, longitud + 1);
+        longitudArbre(arbre.right(), longitudsCodi, longitud + 1);
+    }
+}
+
+void blocAHuffman(){
+    // Generar arbre per primer cop
+    std::vector<int> iteracions (256, 0);
+    for (int i = 0; i < midaBloc; ++i){
+        iteracions[bloc[i]]++;
+    }
+
+    std::multimap<int, BinTree<u_int8_t> > insercions;
+    for (int i = 0; i < 256; ++i){
+        insercions.insert({iteracions[i], BinTree<__uint8_t> ((u_int8_t) i)});
+    }
+
+    std::multimap<int, BinTree<u_int8_t> >::iterator iterador = insercions.begin();
+    BinTree<u_int8_t> arbreTemp;
+
+    while(insercions.size() > 1){
+        int tempOcurr = iterador -> first;
+        arbreTemp = iterador -> second;
+        iterador = insercions.erase(iterador);
+        insercions.insert({
+            tempOcurr + iterador -> first,
+            BinTree<__uint8_t>(0xFF, arbreTemp, iterador -> second)
+        });
+    iterador = insercions.erase(iterador);
+    }
+
+    // Obtenim les longituds de codi per poder refer l'arbre
+    // amb les longituds "ordenades".
+
+    std::vector <int> arbreLong (256, 0), bl_count (256, 0),
+        arbreCodi (256, 0), properCodi (256, 0);
+
+    longitudArbre(iterador -> second, arbreLong, 0);
+
+    int maxLong = 0, codi = 0;
+    for (int i = 0; i < 256; ++i){
+        if (arbreLong[i] > maxLong) maxLong = arbreLong[i];
+        bl_count[arbreLong[i]]++;
+    }
+
+    for (int i = 1; i <= maxLong; ++i){
+        codi = (codi + bl_count[i - 1]) << 1;
+        properCodi[i] = codi;
+    }
+
+    for (int i = 0; i < 256; ++i){
+        int longit = arbreLong[i];
+        if (longit){
+            arbreCodi[i] = properCodi[longit];
+            properCodi[longit]++;
+        }
+    }
+    
+    for (int i = 0; i < 256; ++i){
+        std::cout << arbreLong[i] << std::endl;
+    }
+    
+    exit(1);
+
+}
+
+void byteAlBloc(const u_int8_t nouByte, const bool forcaHuffman){
+    bloc[midaBloc++] = nouByte;
+
+    if (midaBloc == MAX_BLOC || forcaHuffman){
+        blocAHuffman();
+        midaBloc = 0;
+    }
+}
+
+void escriuBit(const bool bit){
     byteActual <<= 1;
     ++bitsActuals;
     if (bit) ++byteActual;
     if (bitsActuals == 8){
-        fwrite( & byteActual , sizeof(u_int8_t), 1, fitxerSortida);
+        //fwrite( & byteActual , sizeof(u_int8_t), 1, fitxerSortida);
+        byteAlBloc(byteActual, false);
         byteActual = 0;
         bitsActuals = 0;
     } 
@@ -41,17 +128,17 @@ void escriuEOF(){
     escriuEOL();
     if (bitsActuals){
         byteActual <<= (8 - bitsActuals);
-        fwrite( & byteActual , sizeof(u_int8_t), 1, fitxerSortida);
+        byteAlBloc(byteActual, true);
     }
     fclose(fitxerSortida);
 }
 
-void escriuLiteral(long literal){
+void escriuLiteral(const long literal){
     escriuBits(0b1100, 4);
     escriuBits(literal, 31);
 }
 
-void escriuDiferencia(long nou, long antic){
+void escriuDiferencia(const long nou, const long antic){
     long diferencia = nou - antic;
     if (diferencia == 0){
         escriuBits(0b10, 2);
@@ -158,6 +245,7 @@ int main (int argc, char ** argv){
 
     byteActual = 0;
     bitsActuals = 0;
+    midaBloc = 0;
 
     std::string entrada;
     long numActual, index;
