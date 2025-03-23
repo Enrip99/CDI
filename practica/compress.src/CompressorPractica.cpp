@@ -37,8 +37,17 @@ void escriuEOL(){
     escriuBits(0b1101, 4);
 }
 
+void escriuEOF(){
+    escriuEOL();
+    if (bitsActuals){
+        byteActual <<= (8 - bitsActuals);
+        fwrite( & byteActual , sizeof(u_int8_t), 1, fitxerSortida);
+    }
+    fclose(fitxerSortida);
+}
+
 void escriuLiteral(long literal){
-    escriuBits(0b1100, 3);
+    escriuBits(0b1100, 4);
     escriuBits(literal, 31);
 }
 
@@ -195,6 +204,5 @@ int main (int argc, char ** argv){
         escriuEOL();
     }
     //EOF
-    escriuEOL();
-    fclose(fitxerSortida);
+    escriuEOF();
 }
