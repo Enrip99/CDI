@@ -117,12 +117,12 @@ long properNumero(std::string const& entrada, long & index){
                 ├─ Són iguals.
                 │  └─ Escrivim 0b10.
                 ├─ 1 <= Diferència <= 16:
-                │  └─ Escrivim 0b00 + la diferència amb 5 bits*. ──┐
-                ├─ 17 <= Diferència <= 272:                        │
+                │  └─ Escrivim 0b00 + la diferència amb 5 bits*. ───┐
+                ├─ 17 <= Diferència <= 272:                         │
                 │  └─ Escrivim 0b010 + la diferència amb 9 bits*. ──┤
-                ├─ 273 <= Diferència <= 4368:                      │
+                ├─ 273 <= Diferència <= 4368:                       │
                 │  └─ Escrivim 0b011 + la diferència amb 13 bits*. ─┤
-                │       Les diferències s'escriuen: ───────────────┘
+                │       Les diferències s'escriuen: ────────────────┘
                 │       ├─ 1 bit per signe (0 positiu, 1 negatiu).
                 │       └─ x bit pel valor absolut - llindar de diferència.
                 └─ 4368 < Diferència:
