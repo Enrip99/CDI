@@ -27,6 +27,7 @@ void longitudArbre(const BinTree<__uint8_t> & arbre, std::vector <int> & longitu
 
 void blocAHuffman(){
     // Generar arbre per primer cop
+    // L'arbre quedarà a iterador->second, trust me bro
     std::vector<int> iteracions (256, 0);
     for (int i = 0; i < midaBloc; ++i){
         iteracions[bloc[i]]++;
@@ -57,6 +58,11 @@ void blocAHuffman(){
     std::vector <int> arbreLong (256, 0), bl_count (256, 0),
         arbreCodi (256, 0), properCodi (256, 0);
 
+    // arbreLong := longitud de codi de cada byte <--
+    // bl_count := nombre de bytes amb codi mida N
+    // arbreCodi := codi real de cada byte <--
+    // properCodi := variable auxiliar
+
     longitudArbre(iterador -> second, arbreLong, 0);
 
     int maxLong = 0, codi = 0;
@@ -77,12 +83,6 @@ void blocAHuffman(){
             properCodi[longit]++;
         }
     }
-    
-    for (int i = 0; i < 256; ++i){
-        std::cout << arbreLong[i] << std::endl;
-    }
-    
-    exit(1);
 
 }
 
