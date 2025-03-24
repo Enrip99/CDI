@@ -9,13 +9,16 @@
 #include "BinTree.hpp"
 
 #define MAX_BLOC 32768
+#define ELEMENTS_HUFFMAN 257
 
-FILE * fitxerSortida;
-u_int8_t byteActual;
-int bitsActuals, midaBloc;
+FILE * fitxerSortida; // Fitxer de sortida a disc
+u_int8_t byteActualExtern; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
+u_int8_t byteActualIntern; // Byte codificat en huffman que enviem a disc.
+int bitsActuals;
+u_int32_t midaBloc;
 u_int8_t * bloc = new u_int8_t[MAX_BLOC];
 
-void longitudArbre(const BinTree<__uint8_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
+void longitudArbre(const BinTree<__uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
     if (arbre.left().empty()){
         longitudsCodi[arbre.value()] = longitud;
     }
@@ -27,19 +30,22 @@ void longitudArbre(const BinTree<__uint8_t> & arbre, std::vector <int> & longitu
 
 void blocAHuffman(){
     // Generar arbre per primer cop
+    // L'arbre es genera amb el símbol adicional 257 que representa fi de bloc
     // L'arbre quedarà a iterador->second, trust me bro
     std::vector<int> iteracions (256, 0);
     for (int i = 0; i < midaBloc; ++i){
         iteracions[bloc[i]]++;
     }
 
-    std::multimap<int, BinTree<u_int8_t> > insercions;
+    std::multimap<int, BinTree<u_int16_t> > insercions;
     for (int i = 0; i < 256; ++i){
-        insercions.insert({iteracions[i], BinTree<__uint8_t> ((u_int8_t) i)});
+        insercions.insert({iteracions[i], BinTree<__uint16_t> ((u_int16_t) i)});
     }
+    // Afegim EOB, només ocorre un cop
+    insercions.insert({1, BinTree<__uint16_t> (ELEMENTS_HUFFMAN)});
 
-    std::multimap<int, BinTree<u_int8_t> >::iterator iterador = insercions.begin();
-    BinTree<u_int8_t> arbreTemp;
+    std::multimap<int, BinTree<u_int16_t> >::iterator iterador = insercions.begin();
+    BinTree<u_int16_t> arbreTemp;
 
     while(insercions.size() > 1){
         int tempOcurr = iterador -> first;
@@ -47,7 +53,7 @@ void blocAHuffman(){
         iterador = insercions.erase(iterador);
         insercions.insert({
             tempOcurr + iterador -> first,
-            BinTree<__uint8_t>(0xFF, arbreTemp, iterador -> second)
+            BinTree<__uint16_t>(-1, arbreTemp, iterador -> second)
         });
     iterador = insercions.erase(iterador);
     }
@@ -55,8 +61,8 @@ void blocAHuffman(){
     // Obtenim les longituds de codi per poder refer l'arbre
     // amb les longituds "ordenades".
 
-    std::vector <int> arbreLong (256, 0), bl_count (256, 0),
-        arbreCodi (256, 0), properCodi (256, 0);
+    std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0),
+        arbreCodi (ELEMENTS_HUFFMAN, 0), properCodi (ELEMENTS_HUFFMAN, 0);
 
     // arbreLong := longitud de codi de cada byte <--
     // bl_count := nombre de bytes amb codi mida N
@@ -66,7 +72,7 @@ void blocAHuffman(){
     longitudArbre(iterador -> second, arbreLong, 0);
 
     int maxLong = 0, codi = 0;
-    for (int i = 0; i < 256; ++i){
+    for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
         if (arbreLong[i] > maxLong) maxLong = arbreLong[i];
         bl_count[arbreLong[i]]++;
     }
@@ -76,7 +82,7 @@ void blocAHuffman(){
         properCodi[i] = codi;
     }
 
-    for (int i = 0; i < 256; ++i){
+    for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
         int longit = arbreLong[i];
         if (longit){
             arbreCodi[i] = properCodi[longit];
@@ -84,6 +90,13 @@ void blocAHuffman(){
         }
     }
 
+    // escriure les ELEMENTS_HUFFMAN mides de codi (per poder generar l'arbre després), segons arbreLong
+    // -> comprimides, no sé encara com, però 8 bits per tots no cal
+    // escriure els elements del bloc codificats en huffman segons arbreCodi
+    // escriure arbreCodi[256] (EOB)
+    // necessito flag per saber quan fer flush?
+
+    //fwrite( & byteActualIntern , sizeof(u_int8_t), 1, fitxerSortida);
 }
 
 void byteAlBloc(const u_int8_t nouByte, const bool forcaHuffman){
@@ -95,74 +108,73 @@ void byteAlBloc(const u_int8_t nouByte, const bool forcaHuffman){
     }
 }
 
-void escriuBit(const bool bit){
-    byteActual <<= 1;
+void bitAlBloc(const bool bit){
+    byteActualExtern <<= 1;
     ++bitsActuals;
-    if (bit) ++byteActual;
+    if (bit) ++byteActualExtern;
     if (bitsActuals == 8){
-        //fwrite( & byteActual , sizeof(u_int8_t), 1, fitxerSortida);
-        byteAlBloc(byteActual, false);
-        byteActual = 0;
+        byteAlBloc(byteActualExtern, false);
+        byteActualExtern = 0;
         bitsActuals = 0;
     } 
 }
 
-void escriuBits(unsigned long bits, int quantitat){
+void bitsAlBloc(unsigned long bits, int quantitat){
     while (quantitat--){
-        escriuBit(bits & (1 << quantitat) );
+        bitAlBloc(bits & (1 << quantitat) );
     }
 }
 
-void escriuNegatius(int & quantitat){
+void negatiusAlBloc(int & quantitat){
     if (!quantitat) return;
-    escriuBits(0b111, 3);
-    escriuBits(quantitat, 10);
+    bitsAlBloc(0b111, 3);
+    bitsAlBloc(quantitat, 10);
     quantitat = 0;
 }
 
-void escriuEOL(){
-    escriuBits(0b1101, 4);
+void eolAlBloc(){
+    bitsAlBloc(0b1101, 4);
 }
 
-void escriuEOF(){
-    escriuEOL();
+void eofAlBloc(){
+    eolAlBloc();
     if (bitsActuals){
-        byteActual <<= (8 - bitsActuals);
-        byteAlBloc(byteActual, true);
+        byteActualExtern <<= (8 - bitsActuals);
+        byteAlBloc(byteActualExtern, true);
     }
     fclose(fitxerSortida);
 }
 
-void escriuLiteral(const long literal){
-    escriuBits(0b1100, 4);
-    escriuBits(literal, 31);
+void literalAlBloc(const long literal){
+    bitsAlBloc(0b1100, 4);
+    bitsAlBloc(literal, 31);
 }
 
-void escriuDiferencia(const long nou, const long antic){
+void diferenciaAlBloc(const long nou, const long antic){
     long diferencia = nou - antic;
     if (diferencia == 0){
-        escriuBits(0b10, 2);
+        bitsAlBloc(0b10, 2);
         return;
     }
     long difAbs = abs(diferencia);
     bool signe = diferencia < 0;
     if (difAbs <= 16){
-        escriuBits(0b00, 2);
-        escriuBit(signe);
-        escriuBits(difAbs - 1, 4);
+        bitsAlBloc(0b00, 2);
+        bitAlBloc(signe);
+        bitsAlBloc(difAbs - 1, 4);
     }
     else if(difAbs <= 272){
-        escriuBits(0b010, 3);
-        escriuBit(signe);
-        escriuBits(difAbs - 17, 8);
+        bitsAlBloc(0b010, 3);
+        bitAlBloc(signe);
+        bitsAlBloc(difAbs - 17, 8);
     }
     else if(difAbs <= 4368){
-        escriuBits(0b011, 3);
-        escriuBit(signe);
-        escriuBits(difAbs - 273, 12);
+        bitsAlBloc(0b011, 3);
+        bitAlBloc(signe);
+        bitsAlBloc(difAbs - 273, 12);
     }
     else{
-        escriuLiteral(nou);
+        literalAlBloc(nou);
     }
 }
 
@@ -243,7 +255,8 @@ int main (int argc, char ** argv){
         exit(1);
     }
 
-    byteActual = 0;
+    byteActualExtern = 0;
+    byteActualIntern = 0;
     bitsActuals = 0;
     midaBloc = 0;
 
@@ -265,7 +278,7 @@ int main (int argc, char ** argv){
                 ++comptadorNegs;
 
                 if (comptadorNegs == 0b1111111111) {
-                    escriuNegatius(comptadorNegs);
+                    negatiusAlBloc(comptadorNegs);
                 }
             }
             else{
@@ -273,24 +286,24 @@ int main (int argc, char ** argv){
 
                 // Escrivim la quantitat de negatius que
                 // haviem trobat fins ara.
-                escriuNegatius(comptadorNegs);
+                negatiusAlBloc(comptadorNegs);
 
                 if (anteriorNatural){
                     // Ja hem trobat un natural abans.
-                    escriuDiferencia(numActual, anteriorNatural.value());
+                    diferenciaAlBloc(numActual, anteriorNatural.value());
                 }
                 else{
                     // Primer cop que trobem un natural.
-                    escriuLiteral(numActual);
+                    literalAlBloc(numActual);
                 }
                 anteriorNatural = numActual;
             }
         }
-        escriuNegatius(comptadorNegs);
+        negatiusAlBloc(comptadorNegs);
 
         //EOL
-        escriuEOL();
+        eolAlBloc();
     }
     //EOF
-    escriuEOF();
+    eofAlBloc();
 }
