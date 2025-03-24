@@ -12,14 +12,14 @@
 #define ELEMENTS_HUFFMAN 257
 
 FILE * fitxerSortida; // Fitxer de sortida a disc.
-u_int8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
-u_int8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
+uint8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
+uint8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
 int bitsActualsBloc; // Numero de bits escrits al byteActualBloc.
 int bitsActualsDisc; // Numero de bits escrits al byteActualDisc.
-u_int32_t midaBloc; // Numero de bytes enviats al bloc.
-u_int8_t * bloc = new u_int8_t[MAX_BLOC]; // Bloc on desem els bits jacodificats de forma propietària abans de ser codificats amb Huffman.
+uint32_t midaBloc; // Numero de bytes enviats al bloc.
+uint8_t * bloc = new uint8_t[MAX_BLOC]; // Bloc on desem els bits jacodificats de forma propietària abans de ser codificats amb Huffman.
 
-void longitudArbre(const BinTree<__uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
+void longitudArbre(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
     if (arbre.left().empty()){
         longitudsCodi[arbre.value()] = longitud;
     }
@@ -29,8 +29,8 @@ void longitudArbre(const BinTree<__uint16_t> & arbre, std::vector <int> & longit
     }
 }
 
-void byteAlDisc(const u_int8_t nouByte){
-    fwrite( & nouByte , sizeof(u_int8_t), 1, fitxerSortida);
+void byteAlDisc(const uint8_t nouByte){
+    fwrite( & nouByte , sizeof(uint8_t), 1, fitxerSortida);
 }
 
 void flushDisc(){
@@ -67,15 +67,15 @@ void blocAHuffman(){
         iteracions[bloc[i]]++;
     }
 
-    std::multimap<int, BinTree<u_int16_t> > insercions;
+    std::multimap<int, BinTree<uint16_t> > insercions;
     for (int i = 0; i < 256; ++i){
-        insercions.insert({iteracions[i], BinTree<__uint16_t> ((u_int16_t) i)});
+        insercions.insert({iteracions[i], BinTree<uint16_t> ((uint16_t) i)});
     }
     // Afegim EOB, només ocorre un cop
-    insercions.insert({1, BinTree<__uint16_t> (ELEMENTS_HUFFMAN - 1)});
+    insercions.insert({1, BinTree<uint16_t> (ELEMENTS_HUFFMAN - 1)});
 
-    std::multimap<int, BinTree<u_int16_t> >::iterator iterador = insercions.begin();
-    BinTree<u_int16_t> arbreTemp;
+    std::multimap<int, BinTree<uint16_t> >::iterator iterador = insercions.begin();
+    BinTree<uint16_t> arbreTemp;
 
     while(insercions.size() > 1){
         int tempOcurr = iterador -> first;
@@ -83,7 +83,7 @@ void blocAHuffman(){
         iterador = insercions.erase(iterador);
         insercions.insert({
             tempOcurr + iterador -> first,
-            BinTree<__uint16_t>(-1, arbreTemp, iterador -> second)
+            BinTree<uint16_t>(-1, arbreTemp, iterador -> second)
         });
     iterador = insercions.erase(iterador);
     }
@@ -141,7 +141,7 @@ void blocAHuffman(){
     bitsAlDisc(arbreCodi[bloc[ELEMENTS_HUFFMAN - 1]], arbreLong[bloc[ELEMENTS_HUFFMAN - 1]]);
 }
 
-void byteAlBloc(const u_int8_t nouByte, const bool forcaHuffman){
+void byteAlBloc(const uint8_t nouByte, const bool forcaHuffman){
     bloc[midaBloc++] = nouByte;
 
     if (midaBloc == MAX_BLOC || forcaHuffman){
