@@ -18,7 +18,7 @@ int main(int argc, char ** argv){
     }
 
     for (int i = 0; i < 256; ++i ){
-        std::cout << count[i] << std::endl;
+        std::cout << count[i] << " " << i << std::endl;
     }
 
 }

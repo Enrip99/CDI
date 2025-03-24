@@ -11,12 +11,13 @@
 #define MAX_BLOC 32768
 #define ELEMENTS_HUFFMAN 257
 
-FILE * fitxerSortida; // Fitxer de sortida a disc
-u_int8_t byteActualExtern; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
-u_int8_t byteActualIntern; // Byte codificat en huffman que enviem a disc.
-int bitsActuals;
-u_int32_t midaBloc;
-u_int8_t * bloc = new u_int8_t[MAX_BLOC];
+FILE * fitxerSortida; // Fitxer de sortida a disc.
+u_int8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
+u_int8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
+int bitsActualsBloc; // Numero de bits escrits al byteActualBloc.
+int bitsActualsDisc; // Numero de bits escrits al byteActualDisc.
+u_int32_t midaBloc; // Numero de bytes enviats al bloc.
+u_int8_t * bloc = new u_int8_t[MAX_BLOC]; // Bloc on desem els bits jacodificats de forma propietària abans de ser codificats amb Huffman.
 
 void longitudArbre(const BinTree<__uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
     if (arbre.left().empty()){
@@ -25,6 +26,35 @@ void longitudArbre(const BinTree<__uint16_t> & arbre, std::vector <int> & longit
     else{
         longitudArbre(arbre.left(), longitudsCodi, longitud + 1);
         longitudArbre(arbre.right(), longitudsCodi, longitud + 1);
+    }
+}
+
+void byteAlDisc(const u_int8_t nouByte){
+    fwrite( & nouByte , sizeof(u_int8_t), 1, fitxerSortida);
+}
+
+void flushDisc(){
+    if (bitsActualsDisc){
+        byteActualDisc <<= (8 - bitsActualsDisc);
+        byteAlDisc(byteActualDisc);
+    }
+    fclose(fitxerSortida);
+}
+
+void bitAlDisc(const bool bit){
+    byteActualDisc <<= 1;
+    ++bitsActualsDisc;
+    if (bit) ++byteActualDisc;
+    if (bitsActualsDisc == 8){
+        byteAlDisc(byteActualDisc);
+        byteActualDisc = 0;
+        bitsActualsDisc = 0;
+    }
+}
+
+void bitsAlDisc(unsigned long bits, int quantitat){
+    while (quantitat--){
+        bitAlDisc(bits & (1 << quantitat) );
     }
 }
 
@@ -42,7 +72,7 @@ void blocAHuffman(){
         insercions.insert({iteracions[i], BinTree<__uint16_t> ((u_int16_t) i)});
     }
     // Afegim EOB, només ocorre un cop
-    insercions.insert({1, BinTree<__uint16_t> (ELEMENTS_HUFFMAN)});
+    insercions.insert({1, BinTree<__uint16_t> (ELEMENTS_HUFFMAN - 1)});
 
     std::multimap<int, BinTree<u_int16_t> >::iterator iterador = insercions.begin();
     BinTree<u_int16_t> arbreTemp;
@@ -91,12 +121,24 @@ void blocAHuffman(){
     }
 
     // escriure les ELEMENTS_HUFFMAN mides de codi (per poder generar l'arbre després), segons arbreLong
-    // -> comprimides, no sé encara com, però 8 bits per tots no cal
+    // -> per a cada simbol, si < 32; escrivim el literal amb 5 bits
+    // -> si >= 32, escrivim 0b00000 seguit del literal amb 8 bits
     // escriure els elements del bloc codificats en huffman segons arbreCodi
     // escriure arbreCodi[256] (EOB)
-    // necessito flag per saber quan fer flush?
 
-    //fwrite( & byteActualIntern , sizeof(u_int8_t), 1, fitxerSortida);
+    for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
+        if (i < 32){
+            bitsAlDisc(arbreLong[i] & 0x1F, 5);
+        }
+        else{
+            bitsAlDisc(0, 5);
+            bitsAlDisc(arbreLong[i] & 0xFF, 8);
+        }
+    }
+    for (int i = 0; i < midaBloc; ++i){
+        bitsAlDisc(arbreCodi[bloc[i]], arbreLong[bloc[i]]);
+    }
+    bitsAlDisc(arbreCodi[bloc[ELEMENTS_HUFFMAN - 1]], arbreLong[bloc[ELEMENTS_HUFFMAN - 1]]);
 }
 
 void byteAlBloc(const u_int8_t nouByte, const bool forcaHuffman){
@@ -109,14 +151,14 @@ void byteAlBloc(const u_int8_t nouByte, const bool forcaHuffman){
 }
 
 void bitAlBloc(const bool bit){
-    byteActualExtern <<= 1;
-    ++bitsActuals;
-    if (bit) ++byteActualExtern;
-    if (bitsActuals == 8){
-        byteAlBloc(byteActualExtern, false);
-        byteActualExtern = 0;
-        bitsActuals = 0;
-    } 
+    byteActualBloc <<= 1;
+    ++bitsActualsBloc;
+    if (bit) ++byteActualBloc;
+    if (bitsActualsBloc == 8){
+        byteAlBloc(byteActualBloc, false);
+        byteActualBloc = 0;
+        bitsActualsBloc = 0;
+    }
 }
 
 void bitsAlBloc(unsigned long bits, int quantitat){
@@ -138,11 +180,11 @@ void eolAlBloc(){
 
 void eofAlBloc(){
     eolAlBloc();
-    if (bitsActuals){
-        byteActualExtern <<= (8 - bitsActuals);
-        byteAlBloc(byteActualExtern, true);
+    if (bitsActualsBloc){
+        byteActualBloc <<= (8 - bitsActualsBloc);
+        byteAlBloc(byteActualBloc, true);
     }
-    fclose(fitxerSortida);
+    flushDisc();
 }
 
 void literalAlBloc(const long literal){
@@ -255,9 +297,10 @@ int main (int argc, char ** argv){
         exit(1);
     }
 
-    byteActualExtern = 0;
-    byteActualIntern = 0;
-    bitsActuals = 0;
+    byteActualBloc = 0;
+    byteActualDisc = 0;
+    bitsActualsBloc = 0;
+    bitsActualsDisc = 0;
     midaBloc = 0;
 
     std::string entrada;
