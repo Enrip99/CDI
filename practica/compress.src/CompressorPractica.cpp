@@ -127,7 +127,7 @@ void blocAHuffman(){
     // escriure arbreCodi[256] (EOB)
 
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
-        if (i < 32){
+        if (arbreLong[i] < 32){
             bitsAlDisc(arbreLong[i] & 0x1F, 5);
         }
         else{
@@ -178,15 +178,6 @@ void eolAlBloc(){
     bitsAlBloc(0b1101, 4);
 }
 
-void eofAlBloc(){
-    eolAlBloc();
-    if (bitsActualsBloc){
-        byteActualBloc <<= (8 - bitsActualsBloc);
-        byteAlBloc(byteActualBloc, true);
-    }
-    flushDisc();
-}
-
 void literalAlBloc(const long literal){
     bitsAlBloc(0b1100, 4);
     bitsAlBloc(literal, 31);
@@ -220,6 +211,15 @@ void diferenciaAlBloc(const long nou, const long antic){
     }
 }
 
+void enfOfFile(){
+    if (bitsActualsBloc){
+        byteActualBloc <<= (8 - bitsActualsBloc);
+        byteAlBloc(byteActualBloc, true);
+    }
+    bitsAlDisc(0, 13);
+    flushDisc();
+}
+
 
 
 long properNumero(std::string const& entrada, long & index){
@@ -248,8 +248,7 @@ long properNumero(std::string const& entrada, long & index){
        │     └─ Escrivim 0b111 + el número de -1 trobats, amb 10 bits.
        ├─ És fi de línia.
        │  ├─ Escrivim 0b1101.
-       │  ├─ Reiniciem a 0 NOMÉS el compador de -1 trobats.
-       │  └─ Fi del fitxer es representa amb dos EOL seguits (una linia buida al final).
+       │  └─ Reiniciem a 0 NOMÉS el compador de -1 trobats.
        └─ És un enter positiu.
           ├─ És el primer que trobem.
           │  └─ Escrivim 0b1100 + el literal sense signe amb 31 bits.
@@ -348,5 +347,5 @@ int main (int argc, char ** argv){
         eolAlBloc();
     }
     //EOF
-    eofAlBloc();
+    enfOfFile();
 }
