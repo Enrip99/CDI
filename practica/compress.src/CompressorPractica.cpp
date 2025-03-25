@@ -8,7 +8,7 @@
 #include <map>
 #include "BinTree.hpp"
 
-#define MAX_BLOC 32768
+#define MAX_BLOC 65536
 #define ELEMENTS_HUFFMAN 257
 
 FILE * fitxerSortida; // Fitxer de sortida a disc.
