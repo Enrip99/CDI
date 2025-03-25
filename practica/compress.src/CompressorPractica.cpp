@@ -77,8 +77,8 @@ Estructura de la codificació Huffman:
           │ │
           │ ├─ Per a mides < 32: escrivim la mida amb 5 bits.
           │ │
-          │ ├─ Per a mides >= 32: escrivim 0b00000 seguit de la mida amb
-          │ │  8 bits de forma literal. Els valors 1..31 no es fan servir.
+          │ ├─ Per a mides >= 32: escrivim 0b00000 seguit de la mida
+          │ │  restat 31 amb 8 bits de forma literal.
           │ │
           │ └─ El valor 0b0000000000000 (13 bits a 0) indiquen fi del fitxer (EOF).
           │    Només ha d'aparèixer com a primer element d'una "sèrie de codis".
@@ -151,8 +151,8 @@ void blocAHuffman(){
     // Obtenim les longituds de codi per poder refer l'arbre
     // amb les longituds "ordenades".
 
-    std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0),
-        arbreCodi (ELEMENTS_HUFFMAN, 0), properCodi (ELEMENTS_HUFFMAN, 0);
+    std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0);
+    std::vector <unsigned long> arbreCodi (ELEMENTS_HUFFMAN, 0), properCodi (ELEMENTS_HUFFMAN, 0);
 
     // arbreLong := longitud de codi de cada byte <--
     // bl_count := nombre de bytes amb codi mida N
@@ -188,14 +188,14 @@ void blocAHuffman(){
 
     // Escrivim en ordre les mides de tots els codi,
     // ├─ si mida < 32, escrivim el literal amb 5 bits.
-    // └─ si mida >= 32, escrivim 0b00000 seguit del literal amb 8 bits.
+    // └─ si mida >= 32, escrivim 0b00000 seguit del literal restat 31, amb 8 bits.
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
         if (arbreLong[i] < 32){
             bitsAlDisc(arbreLong[i] & 0x1F, 5);
         }
         else{
             bitsAlDisc(0, 5);
-            bitsAlDisc(arbreLong[i] & 0xFF, 8);
+            bitsAlDisc((arbreLong[i] -31 ) & 0xFF, 8);
         }
     }
 
@@ -203,9 +203,8 @@ void blocAHuffman(){
     for (int i = 0; i < midaBloc; ++i){
         bitsAlDisc(arbreCodi[bloc[i]], arbreLong[bloc[i]]);
     }
-
     // Escrivim el codi pel signe de final de bloc (257).
-    bitsAlDisc(arbreCodi[bloc[ELEMENTS_HUFFMAN - 1]], arbreLong[bloc[ELEMENTS_HUFFMAN - 1]]);
+    bitsAlDisc(arbreCodi[ELEMENTS_HUFFMAN - 1], arbreLong[ELEMENTS_HUFFMAN - 1]);
 }
 
 // Afegeix nouByte al bloc.
