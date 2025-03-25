@@ -467,10 +467,10 @@ int main (int argc, char ** argv){
         // Com que ha acabat la línia, escrivim els -1 que teníem a la recàmara.
         negatiusAlBloc(comptadorNegs);
 
-        // EOL
+        // I finalment enviem el símbol de final de línia.
         eolAlBloc();
     }
-    // EOF
+    
     // Escriu EOF a disc, i finalitza les escriptures del bloc a disc.
     endOfFile();
 }
