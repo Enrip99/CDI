@@ -248,9 +248,10 @@ int main (int argc, char ** argv){
                     bool fiDeFitxer;
                     unsigned long iteracions = llegeixBitsDelBloc(10, fiDeFitxer);
                     if (fiDeFitxer) break;
-                    if (primersSimbolLinia) fitxerSortida << " ";
+                    if (!primersSimbolLinia) fitxerSortida << " ";
                     fitxerSortida << "-1";
                     while (iteracions--) fitxerSortida << " -1";
+                    primersSimbolLinia = false;
                 }
             }
         }
@@ -287,5 +288,5 @@ int main (int argc, char ** argv){
         }
     }
     // EOF
-    
+
 }
