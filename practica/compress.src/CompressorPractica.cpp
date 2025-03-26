@@ -208,12 +208,12 @@ void blocAHuffman(){
 }
 
 // Afegeix nouByte al bloc.
-// Cada cop que s'omple el bloc, o forcaHuffman és true,
-// es codifica el bloc amb huffman, s'escriu a disc i es buida el bloc.
-void byteAlBloc(const uint8_t nouByte, const bool forcaHuffman){
+// Cada cop que s'omple el bloc, es codifica amb huffman,
+// s'escriu a disc i es buida.
+void byteAlBloc(const uint8_t nouByte){
     bloc[midaBloc++] = nouByte;
 
-    if (midaBloc == MAX_BLOC || forcaHuffman){
+    if (midaBloc == MAX_BLOC){
         blocAHuffman();
         midaBloc = 0;
     }
@@ -229,7 +229,7 @@ void bitAlBloc(const bool bit){
     ++bitsActualsBloc;
     if (bit) ++byteActualBloc;
     if (bitsActualsBloc == 8){
-        byteAlBloc(byteActualBloc, false);
+        byteAlBloc(byteActualBloc);
         byteActualBloc = 0;
         bitsActualsBloc = 0;
     }
@@ -312,8 +312,9 @@ void diferenciaAlBloc(const long nou, const long antic){
 void endOfFile(){
     if (bitsActualsBloc){
         byteActualBloc <<= (8 - bitsActualsBloc);
-        byteAlBloc(byteActualBloc, true);
+        byteAlBloc(byteActualBloc);
     }
+    blocAHuffman();
     bitsAlDisc(0, 13);
     flushDisc();
 }
