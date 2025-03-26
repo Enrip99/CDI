@@ -17,7 +17,8 @@ uint8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
 int bitsActualsBloc; // Nombre de bits escrits al byteActualBloc.
 int bitsActualsDisc; // Nombre de bits escrits al byteActualDisc.
 FILE * fitxerEntrada; // Fitxer d'entrada de disc.
-uint32_t midaBloc; // Numero de bytes llegits del bloc actual.
+uint32_t midaBloc; // Mida del bloc actual.
+uint32_t posActualBloc; // Numero de bytes llegits del bloc actual.
 uint8_t * bloc = new uint8_t[MAX_BLOC]; // Bloc on desem temporalment els bits descodificats per Huffman de forma propietària abans de ser descodificats per segon cop.
 
 // Actualitza byteActualDisc amb el següent byte de disc.
@@ -117,6 +118,46 @@ bool llegeixBlocDeDisc(){
     }
 }
 
+
+bool llegeixByteDelBloc(){
+    if (posActualBloc == midaBloc){
+        if (llegeixBlocDeDisc()){
+            posActualBloc = 0;
+        }
+        else return false;
+    }
+    byteActualBloc = bloc[posActualBloc++];
+    return true;
+}
+
+int llegeixBitDelBloc(){
+    if (bitsActualsBloc == 0){
+        if (llegeixByteDelBloc()){
+            bitsActualsBloc = 8;
+        }
+        else return -1;
+    }
+    return (byteActualBloc >> (--bitsActualsBloc)) & 1;
+}
+
+unsigned long llegeixBitsDelBloc(int quantitat, bool & ok){
+    unsigned long temporal = 0;
+    while (quantitat--){
+        int nextBit = llegeixBitDelBloc();
+        if (nextBit < 0){
+            ok = false;
+            return 0;
+        }
+        else {
+            temporal |= nextBit << quantitat;
+        }
+    }
+    ok = true;
+    return temporal;
+}
+
+
+
 int main (int argc, char ** argv){
 
     // Comprovació dels paràmetres d'entrada.
@@ -154,8 +195,10 @@ int main (int argc, char ** argv){
     bitsActualsBloc = 0;
     bitsActualsDisc = 0;
     
-    while (llegeixBlocDeDisc()){
+    
 
+    for (int res = llegeixBitDelBloc(); res >= 0; res = llegeixBitDelBloc()){
+        
     }
 
 }
