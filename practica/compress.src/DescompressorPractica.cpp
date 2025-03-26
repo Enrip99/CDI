@@ -118,7 +118,9 @@ bool llegeixBlocDeDisc(){
     }
 }
 
-
+// Actualitza byteActualBloc amb el següent byte al bloc
+// en cas de ser buit, demana el proper bloc.
+// Retorna false si troba EOF. Altrament, retorna true.
 bool llegeixByteDelBloc(){
     if (posActualBloc == midaBloc){
         if (llegeixBlocDeDisc()){
@@ -130,6 +132,8 @@ bool llegeixByteDelBloc(){
     return true;
 }
 
+// Retorna el proper bit del bloc.
+// Retorna -1 si troba EOF. Altrament, retorna el bit com a 1 o 0.
 int llegeixBitDelBloc(){
     if (bitsActualsBloc == 0){
         if (llegeixByteDelBloc()){
@@ -140,19 +144,22 @@ int llegeixBitDelBloc(){
     return (byteActualBloc >> (--bitsActualsBloc)) & 1;
 }
 
-unsigned long llegeixBitsDelBloc(int quantitat, bool & ok){
+// Retorna els quantitat propers bits del bloc
+// Comportament no definit per a quantitat > (sizeof(unsigned long) * 8).
+// fiDeFitxer indica si s'ha trobat EOF.
+unsigned long llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer){
     unsigned long temporal = 0;
     while (quantitat--){
         int nextBit = llegeixBitDelBloc();
         if (nextBit < 0){
-            ok = false;
+            fiDeFitxer = true;
             return 0;
         }
         else {
             temporal |= nextBit << quantitat;
         }
     }
-    ok = true;
+    fiDeFitxer = false;
     return temporal;
 }
 
@@ -195,10 +202,90 @@ int main (int argc, char ** argv){
     bitsActualsBloc = 0;
     bitsActualsDisc = 0;
     
-    
+    bool primersSimbolLinia = true;
+    std::optional<long> anteriorNatural; // Número que vam descomprimir a l'anterior iteració del bucle.
 
     for (int res = llegeixBitDelBloc(); res >= 0; res = llegeixBitDelBloc()){
-        
+        if (res == 1){
+            //0b1
+            res = llegeixBitDelBloc();
+            if (res < 0) break;
+            if (res == 0){
+                // mateix valor que abans
+                // 0b10
+                if (!primersSimbolLinia) fitxerSortida << " ";
+                primersSimbolLinia = false;
+                fitxerSortida << anteriorNatural.value();
+            }
+            else{
+                // 0b11
+                res = llegeixBitDelBloc();
+                if (res < 0) break;
+                if (res == 0){
+                    // 0b110
+                    res = llegeixBitDelBloc();
+                    if (res < 0) break;
+                    if (res == 0){
+                        // Literal
+                        // 0b1100
+                        bool fiDeFitxer;
+                        anteriorNatural = llegeixBitsDelBloc(31, fiDeFitxer);
+                        if (fiDeFitxer) break;
+                        if (!primersSimbolLinia) fitxerSortida << " ";
+                        primersSimbolLinia = false;
+                        fitxerSortida << anteriorNatural.value();
+                    }
+                    else{
+                        // EOL
+                        // 0b1101
+                        fitxerSortida << std::endl;
+                        primersSimbolLinia = true;
+                    }
+                }
+                else{
+                    // -1's
+                    // 0b111
+                    bool fiDeFitxer;
+                    unsigned long iteracions = llegeixBitsDelBloc(10, fiDeFitxer);
+                    if (fiDeFitxer) break;
+                    if (primersSimbolLinia) fitxerSortida << " ";
+                    fitxerSortida << "-1";
+                    while (iteracions--) fitxerSortida << " -1";
+                }
+            }
+        }
+        else{
+            // increment/decrement
+            // 0b0
+            long increment, bitsALlegir = 4, suma = 1;
+            bool fiDeFitxer, signe = false; //per defecte, asumim positiu.
+            res = llegeixBitDelBloc();
+            if (res < 0) break;
+            if (res > 0){
+                res = llegeixBitDelBloc();
+                if (res < 0) break;
+                if (res == 0) {
+                    bitsALlegir = 8;
+                    suma = 17;
+                }
+                else {
+                    bitsALlegir = 12;
+                    suma = 273;
+                }
+            }
+            res = llegeixBitDelBloc();
+            if (res < 0) break;
+            signe = res;
+            increment = llegeixBitsDelBloc(bitsALlegir, fiDeFitxer);
+            if (fiDeFitxer) break;
+            if (!primersSimbolLinia) fitxerSortida << " ";
+            primersSimbolLinia = false;
+            increment += suma;
+            if (signe) increment *= -1;
+            anteriorNatural.value() += increment;
+            fitxerSortida << anteriorNatural.value();
+        }
     }
-
+    // EOF
+    
 }
