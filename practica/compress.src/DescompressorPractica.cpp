@@ -21,6 +21,7 @@ uint32_t midaBloc; // Mida del bloc actual.
 uint32_t posActualBloc; // Numero de bytes llegits del bloc actual.
 uint8_t * bloc = new uint8_t[MAX_BLOC]; // Bloc on desem temporalment els bits descodificats per Huffman de forma propietària abans de ser descodificats per segon cop.
 
+
 // Actualitza byteActualDisc amb el següent byte de disc.
 void llegeixByteDeDisc(){
     fread(& byteActualDisc, sizeof(uint8_t), 1, fitxerEntrada);
@@ -45,13 +46,13 @@ unsigned long llegeixBitsDeDisc(int quantitat){
     return temporal;
 }
 
-void llegeixArbre(BinTree<int> arbre){
+void llegeixArbre(const BinTree<int> & arbre, std::string codi){
     if (arbre.left().empty()) {
-        std::cout << arbre.value() << std::endl;
+        std::cout << codi << ": " << arbre.value() << std::endl;
         return;
     }
-    llegeixArbre(arbre.left());
-    llegeixArbre(arbre.right());
+    llegeixArbre(arbre.left(), codi + '0');
+    llegeixArbre(arbre.right(), codi + '1');
 }
 
 // Llegeix i decodifica el proper bloc de disc.
@@ -102,7 +103,7 @@ bool llegeixBlocDeDisc(){
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
         int longit = arbreLong[i];
         if (longit){
-            mapaCodi[std::pair<unsigned long, int>(properCodi[longit], longit)] = BinTree<int> (i);
+            mapaCodi[std::pair<int, unsigned long>(longit, properCodi[longit])] = BinTree<int> (i);
             properCodi[longit]++;
         }
     }
@@ -114,19 +115,14 @@ bool llegeixBlocDeDisc(){
         mapaCodi.erase(it);
         it = mapaCodi.end();
         --it;
-        //std::cout << aux.value() << " " << it->second.value() << std::endl;
-        mapaCodi[std::pair<unsigned long, int>(it->first.first >> 1, it->first.second - 1)] = BinTree(-1, it->second, aux);
+        mapaCodi[std::pair<int, unsigned long>(it->first.first - 1, it->first.second >> 1)] = BinTree(-1, it->second, aux);
         mapaCodi.erase(it);
-        for (auto i = mapaCodi.begin(); i != mapaCodi.end(); ++i) std::cout << it->second.value() << " " ;
-        std::cout << std::endl;
     }
 
+    std::cout << "HOLA" << std::endl;
+    std::flush (std::cout);
     arbreIterar = mapaCodi.begin()->second;
-    llegeixArbre(arbreIterar);
-    std::cout << "HOLBBB" << std::endl;
-    exit(0);
 
-    std::flush(fitxerSortida);
     while (1){
         if (arbreIterar.value() == ELEMENTS_HUFFMAN - 1) break;
         else if (arbreIterar.value() == -1){
@@ -137,8 +133,6 @@ bool llegeixBlocDeDisc(){
             arbreIterar = mapaCodi.begin()->second;
         }
     }
-    std::cout << "HOLAAA" << std::endl;
-    std::flush(fitxerSortida);
     return true;
 }
 
@@ -190,6 +184,7 @@ unsigned long llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer){
 
 
 int main (int argc, char ** argv){
+    int x; std::cin >> x;
 
     // Comprovació dels paràmetres d'entrada.
 
