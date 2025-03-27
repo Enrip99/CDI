@@ -45,32 +45,6 @@ unsigned long llegeixBitsDeDisc(int quantitat){
     return temporal;
 }
 
-void creaArbreIntern(
-    BinTree<int> & arbreCodi,
-    std::map <std::pair<unsigned long, int>, int>::iterator & iterador,
-    unsigned long codi,
-    int longitud
-    ){
-    if (iterador->first.first == codi && iterador->first.second == longitud){
-        arbreCodi.setValue(iterador->second);
-        iterador++;
-        return;
-    }
-    arbreCodi.addChildren(BinTree<int>(-1), BinTree<int>(-1));
-    BinTree<int> l = arbreCodi.left(), r = arbreCodi.right();
-    creaArbreIntern(l, iterador, codi << 1, longitud + 1);
-    creaArbreIntern(r, iterador, (codi << 1) + 1, longitud + 1);
-}
-
-void creaArbre(
-    BinTree<int> & arrel,
-    std::map <std::pair<unsigned long, int>, int> mapa
-    ){
-    arrel = BinTree<int> (-1);
-    std::map <std::pair<unsigned long, int>, int>::iterator it = mapa.begin();
-    creaArbreIntern(arrel, it, 0, 0);
-}
-
 // Llegeix i decodifica el proper bloc de disc.
 // Deixa els bytes llegits a bloc.
 // Actualitza midaBloc amb el nombre de bytes llegits.
@@ -80,8 +54,9 @@ bool llegeixBlocDeDisc(){
 
     std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0);
     std::vector <unsigned long> /*arbreCodi (ELEMENTS_HUFFMAN, 0),*/ properCodi (ELEMENTS_HUFFMAN, 0);
-    std::map <std::pair<unsigned long, int>, int> mapaCodi;
-    BinTree<int> arbreCodi, arbreIterar;
+    //std::map <std::pair<unsigned long, int>, int> mapaCodi;
+    std::map <std::pair<unsigned long, int>, BinTree<int>> mapaCodi;
+    BinTree<int> arbreIterar;
 
     // arbreLong := longitud de codi de cada byte <--
     // bl_count := nombre de bytes amb codi mida N
@@ -118,15 +93,22 @@ bool llegeixBlocDeDisc(){
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
         int longit = arbreLong[i];
         if (longit){
-            mapaCodi[std::pair<unsigned long, int>(properCodi[longit], longit)] = i;
+            mapaCodi[std::pair<unsigned long, int>(properCodi[longit], longit)] = BinTree<int> (i);
             properCodi[longit]++;
         }
     }
-
-     
-    creaArbre(arbreCodi, mapaCodi);
-
-    arbreIterar = arbreCodi;
+    
+    while(mapaCodi.size() > 1){
+        auto it = mapaCodi.end();
+        --it;
+        BinTree aux = it->second;
+        mapaCodi.erase(it);
+        it = mapaCodi.end();
+        --it;
+        mapaCodi[std::pair<unsigned long, int>(it->first.first >> 1, it->first.second - 1)] = BinTree(0, it->second, aux);
+        mapaCodi.erase(it);
+    }
+    arbreIterar = mapaCodi.begin()->second;
     std::cout << "HOLBBB" << std::endl;
 
     std::flush(fitxerSortida);
@@ -137,10 +119,11 @@ bool llegeixBlocDeDisc(){
         }
         else{
             bloc[midaBloc++] = arbreIterar.value();
-            arbreIterar = arbreCodi;
+            arbreIterar = mapaCodi.begin()->second;
         }
     }
     std::cout << "HOLAAA" << std::endl;
+    std::flush(fitxerSortida);
     return true;
 }
 

@@ -145,7 +145,7 @@ void blocAHuffman(){
             tempOcurr + iterador -> first,
             BinTree<uint16_t>(-1, arbreTemp, iterador -> second)
         });
-    iterador = insercions.erase(iterador);
+        iterador = insercions.erase(iterador);
     }
 
     // Obtenim les longituds de codi per poder refer l'arbre
