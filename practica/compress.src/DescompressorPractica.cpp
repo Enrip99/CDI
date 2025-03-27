@@ -45,6 +45,15 @@ unsigned long llegeixBitsDeDisc(int quantitat){
     return temporal;
 }
 
+void llegeixArbre(BinTree<int> arbre){
+    if (arbre.left().empty()) {
+        std::cout << arbre.value() << std::endl;
+        return;
+    }
+    llegeixArbre(arbre.left());
+    llegeixArbre(arbre.right());
+}
+
 // Llegeix i decodifica el proper bloc de disc.
 // Deixa els bytes llegits a bloc.
 // Actualitza midaBloc amb el nombre de bytes llegits.
@@ -105,11 +114,17 @@ bool llegeixBlocDeDisc(){
         mapaCodi.erase(it);
         it = mapaCodi.end();
         --it;
-        mapaCodi[std::pair<unsigned long, int>(it->first.first >> 1, it->first.second - 1)] = BinTree(0, it->second, aux);
+        //std::cout << aux.value() << " " << it->second.value() << std::endl;
+        mapaCodi[std::pair<unsigned long, int>(it->first.first >> 1, it->first.second - 1)] = BinTree(-1, it->second, aux);
         mapaCodi.erase(it);
+        for (auto i = mapaCodi.begin(); i != mapaCodi.end(); ++i) std::cout << it->second.value() << " " ;
+        std::cout << std::endl;
     }
+
     arbreIterar = mapaCodi.begin()->second;
+    llegeixArbre(arbreIterar);
     std::cout << "HOLBBB" << std::endl;
+    exit(0);
 
     std::flush(fitxerSortida);
     while (1){
