@@ -118,9 +118,7 @@ bool llegeixBlocDeDisc(){
         mapaCodi[std::pair<int, unsigned long>(it->first.first - 1, it->first.second >> 1)] = BinTree(-1, it->second, aux);
         mapaCodi.erase(it);
     }
-
-    std::cout << "HOLA" << std::endl;
-    std::flush (std::cout);
+    
     arbreIterar = mapaCodi.begin()->second;
 
     while (1){
@@ -184,7 +182,6 @@ unsigned long llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer){
 
 
 int main (int argc, char ** argv){
-    int x; std::cin >> x;
 
     // Comprovació dels paràmetres d'entrada.
 
