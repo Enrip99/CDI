@@ -120,7 +120,7 @@ bool llegeixBlocDeDisc(){
     }
     
     arbreIterar = mapaCodi.begin()->second;
-
+    midaBloc = 0;
     while (1){
         if (arbreIterar.value() == ELEMENTS_HUFFMAN - 1) break;
         else if (arbreIterar.value() == -1){
