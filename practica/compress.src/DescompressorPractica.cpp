@@ -21,6 +21,7 @@ uint32_t midaBloc; // Mida del bloc actual.
 uint32_t posActualBloc; // Numero de bytes llegits del bloc actual.
 uint8_t * bloc = new uint8_t[MAX_BLOC]; // Bloc on desem temporalment els bits descodificats per Huffman de forma propietària abans de ser descodificats per segon cop.
 
+
 // Actualitza byteActualDisc amb el següent byte de disc.
 void llegeixByteDeDisc(){
     fread(& byteActualDisc, sizeof(uint8_t), 1, fitxerEntrada);
@@ -43,7 +44,16 @@ unsigned long llegeixBitsDeDisc(int quantitat){
         temporal |= llegeixBitDeDisc() << quantitat;
     }
     return temporal;
-} 
+}
+
+void llegeixArbre(const BinTree<int> & arbre, std::string codi){
+    if (arbre.left().empty()) {
+        std::cout << codi << ": " << arbre.value() << std::endl;
+        return;
+    }
+    llegeixArbre(arbre.left(), codi + '0');
+    llegeixArbre(arbre.right(), codi + '1');
+}
 
 // Llegeix i decodifica el proper bloc de disc.
 // Deixa els bytes llegits a bloc.
@@ -54,11 +64,13 @@ bool llegeixBlocDeDisc(){
 
     std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0);
     std::vector <unsigned long> /*arbreCodi (ELEMENTS_HUFFMAN, 0),*/ properCodi (ELEMENTS_HUFFMAN, 0);
-    std::map <std::pair<unsigned long, int>, int> arbreCodi;
+    //std::map <std::pair<unsigned long, int>, int> mapaCodi;
+    std::map <std::pair<unsigned long, int>, BinTree<int>> mapaCodi;
+    BinTree<int> arbreIterar;
 
     // arbreLong := longitud de codi de cada byte <--
     // bl_count := nombre de bytes amb codi mida N
-    // arbreCodi := codi real de cada byte <--
+    // mapaCodi := codi real de cada byte <--
     // properCodi := variable auxiliar
 
     // Obtenim les longituds de codi per poder refer l'arbre
@@ -91,31 +103,35 @@ bool llegeixBlocDeDisc(){
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
         int longit = arbreLong[i];
         if (longit){
-            //arbreCodi[i] = properCodi[longit];
-            arbreCodi[std::pair<unsigned long, int>(properCodi[longit], longit)] = i;
+            mapaCodi[std::pair<int, unsigned long>(longit, properCodi[longit])] = BinTree<int> (i);
             properCodi[longit]++;
         }
     }
-
+    
+    while(mapaCodi.size() > 1){
+        auto it = mapaCodi.end();
+        --it;
+        BinTree aux = it->second;
+        mapaCodi.erase(it);
+        it = mapaCodi.end();
+        --it;
+        mapaCodi[std::pair<int, unsigned long>(it->first.first - 1, it->first.second >> 1)] = BinTree(-1, it->second, aux);
+        mapaCodi.erase(it);
+    }
+    
+    arbreIterar = mapaCodi.begin()->second;
     midaBloc = 0;
-    unsigned long codiLlegint = 0;
-    int midaCodiLlegint = 0;
-
     while (1){
-        bool bit = llegeixBitDeDisc();
-        codiLlegint = (codiLlegint << 1) + bit;
-        ++midaCodiLlegint;
-        if (auto cerca = arbreCodi.find(std::pair(codiLlegint,midaCodiLlegint)); cerca != arbreCodi.end()){
-            if (cerca->second == ELEMENTS_HUFFMAN - 1){
-                return true;
-            }
-            else{
-                bloc[midaBloc++] = cerca->second;
-                codiLlegint = 0;
-                midaCodiLlegint = 0;
-            }
+        if (arbreIterar.value() == ELEMENTS_HUFFMAN - 1) break;
+        else if (arbreIterar.value() == -1){
+            llegeixBitDeDisc() ? arbreIterar = arbreIterar.right() : arbreIterar = arbreIterar.left();
+        }
+        else{
+            bloc[midaBloc++] = arbreIterar.value();
+            arbreIterar = mapaCodi.begin()->second;
         }
     }
+    return true;
 }
 
 // Actualitza byteActualBloc amb el següent byte al bloc
