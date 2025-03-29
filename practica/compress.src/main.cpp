@@ -4,9 +4,10 @@
 
 void usage(char * comanda){
     std::string misError (comanda);
-    std::cerr << "Arguments incorrectes.\nUs: " + misError + " entrada.txt sortida.knk" << std::endl;
+    std::cerr << "Arguments incorrectes. Ús: " << std::endl <<
+        "  " + misError + " -c entrada.txt sortida.knk" << std::endl <<
+        "  " + misError + " -d entrada.knk sortida.txt" << std::endl;
     exit(1);
-
 }
 
 int main (int argc, char ** argv){
