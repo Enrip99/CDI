@@ -1,34 +1,53 @@
+#ifndef DESCOMPRESSOR_PRAC_H
+#define DESCOMPRESSOR_PRAC_H
+
 #include "BinTree.hpp"
-#include <vector>
+#include <fstream>
+#include <iostream>
+#include <map>
 #include <optional>
 #include <stdio.h>
 #include <string>
 #include <string.h>
-#include <iostream>
-#include <fstream>
-#include <map>
+#include <vector>
 
 #define MAX_BLOC 65536
 #define ELEMENTS_HUFFMAN 257
 
-std::ofstream fitxerSortida; // Fitxer de sortida a disc.
-uint8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
-uint8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
-int bitsActualsBloc; // Nombre de bits escrits al byteActualBloc.
-int bitsActualsDisc; // Nombre de bits escrits al byteActualDisc.
-FILE * fitxerEntrada; // Fitxer d'entrada de disc.
-uint32_t midaBloc; // Mida del bloc actual.
-uint32_t posActualBloc; // Numero de bytes llegits del bloc actual.
-uint8_t * bloc = new uint8_t[MAX_BLOC]; // Bloc on desem temporalment els bits descodificats per Huffman de forma propietària abans de ser descodificats per segon cop.
+class DescompressorPrac{
+    public:
+        void descomprimeix (char * paramEntrada, char * paramSortida);
+    private:
+        std::ofstream fitxerSortida; // Fitxer de sortida a disc.
+        uint8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
+        uint8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
+        int bitsActualsBloc; // Nombre de bits escrits al byteActualBloc.
+        int bitsActualsDisc; // Nombre de bits escrits al byteActualDisc.
+        FILE * fitxerEntrada; // Fitxer d'entrada de disc.
+        uint32_t midaBloc; // Mida del bloc actual.
+        uint32_t posActualBloc; // Numero de bytes llegits del bloc actual.
+        uint8_t bloc [MAX_BLOC]; // Bloc on desem temporalment els bits descodificats per Huffman de forma propietària abans de ser descodificats per segon cop.
+        void llegeixByteDeDisc();
+        bool llegeixBitDeDisc();
+        unsigned long llegeixBitsDeDisc(int quantitat);
+        void llegeixArbre(const BinTree<int> & arbre, std::string codi);
+        bool llegeixBlocDeDisc();
+        bool llegeixByteDelBloc();
+        int llegeixBitDelBloc();
+        unsigned long llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer);
+
+};
+
+
 
 
 // Actualitza byteActualDisc amb el següent byte de disc.
-void llegeixByteDeDisc(){
+void DescompressorPrac::llegeixByteDeDisc(){
     fread(& byteActualDisc, sizeof(uint8_t), 1, fitxerEntrada);
 }
 
 // Retorna el proper bit desat a disc.
-bool llegeixBitDeDisc(){
+bool DescompressorPrac::llegeixBitDeDisc(){
     if (bitsActualsDisc == 0){
         llegeixByteDeDisc();
         bitsActualsDisc = 8;
@@ -38,7 +57,7 @@ bool llegeixBitDeDisc(){
 
 // Retorna els propers quantitat bits desats a disc.
 // Funcionament no definit per a quantitat > (sizeof(unsigned long) * 8).
-unsigned long llegeixBitsDeDisc(int quantitat){
+unsigned long DescompressorPrac::llegeixBitsDeDisc(int quantitat){
     unsigned long temporal = 0;
     while (quantitat--){
         temporal |= llegeixBitDeDisc() << quantitat;
@@ -46,7 +65,7 @@ unsigned long llegeixBitsDeDisc(int quantitat){
     return temporal;
 }
 
-void llegeixArbre(const BinTree<int> & arbre, std::string codi){
+void DescompressorPrac::llegeixArbre(const BinTree<int> & arbre, std::string codi){
     if (arbre.left().empty()) {
         std::cout << codi << ": " << arbre.value() << std::endl;
         return;
@@ -60,7 +79,7 @@ void llegeixArbre(const BinTree<int> & arbre, std::string codi){
 // Actualitza midaBloc amb el nombre de bytes llegits.
 // Retorna false si troba cap EOF.
 // Altrament, retorna true.
-bool llegeixBlocDeDisc(){
+bool DescompressorPrac::llegeixBlocDeDisc(){
 
     std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0);
     std::vector <unsigned long> /*arbreCodi (ELEMENTS_HUFFMAN, 0),*/ properCodi (ELEMENTS_HUFFMAN, 0);
@@ -137,7 +156,7 @@ bool llegeixBlocDeDisc(){
 // Actualitza byteActualBloc amb el següent byte al bloc
 // en cas de ser buit, demana el proper bloc.
 // Retorna false si troba EOF. Altrament, retorna true.
-bool llegeixByteDelBloc(){
+bool DescompressorPrac::llegeixByteDelBloc(){
     if (posActualBloc == midaBloc){
         if (llegeixBlocDeDisc()){
             posActualBloc = 0;
@@ -150,7 +169,7 @@ bool llegeixByteDelBloc(){
 
 // Retorna el proper bit del bloc.
 // Retorna -1 si troba EOF. Altrament, retorna el bit com a 1 o 0.
-int llegeixBitDelBloc(){
+int DescompressorPrac::llegeixBitDelBloc(){
     if (bitsActualsBloc == 0){
         if (llegeixByteDelBloc()){
             bitsActualsBloc = 8;
@@ -163,7 +182,7 @@ int llegeixBitDelBloc(){
 // Retorna els quantitat propers bits del bloc
 // Comportament no definit per a quantitat > (sizeof(unsigned long) * 8).
 // fiDeFitxer indica si s'ha trobat EOF.
-unsigned long llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer){
+unsigned long DescompressorPrac::llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer){
     unsigned long temporal = 0;
     while (quantitat--){
         int nextBit = llegeixBitDelBloc();
@@ -181,23 +200,17 @@ unsigned long llegeixBitsDelBloc(int quantitat, bool & fiDeFitxer){
 
 
 
-int main (int argc, char ** argv){
+void DescompressorPrac::descomprimeix (char * paramEntrada, char * paramSortida){
 
     // Comprovació dels paràmetres d'entrada.
 
-    if (argc != 3){
-        std::string misError (argv[0]);
-        std::cerr << "Arguments incorrectes.\nUs: " + misError + " entrada.txt sortida.knk" << std::endl;
-        exit(1);
-    }
-
-    if (strcmp(argv[1], argv[2]) == 0){
+    if (strcmp(paramEntrada, paramSortida) == 0){
         std::cerr << "Mateix argument d'entrada que de sortida." << std::endl;
         exit(1);
     }
 
     // Preparem fitxer d'entrada.
-    fitxerEntrada = fopen (argv[1], "r");
+    fitxerEntrada = fopen (paramEntrada, "r");
 
     if (!fitxerEntrada){
         perror("Error obrint fitxer d'entrada");
@@ -205,7 +218,7 @@ int main (int argc, char ** argv){
     }
 
     // Preparem fitxer d'escriptura.
-    fitxerSortida = std::ofstream(argv[2]);
+    fitxerSortida = std::ofstream(paramSortida);
 
     if (!fitxerSortida){
         perror("Error obrint fitxer de sortida");
@@ -306,3 +319,5 @@ int main (int argc, char ** argv){
     // EOF
 
 }
+
+#endif

@@ -1,32 +1,58 @@
+#ifndef COMPRESSOR_PRAC_H
+#define COMPRESSOR_PRAC_H
+
+#include "BinTree.hpp"
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <optional>
+#include <stdio.h>
 #include <string>
 #include <string.h>
-#include <iostream>
-#include <optional>
-#include <fstream>
-#include <stdio.h>
 #include <vector>
-#include <map>
-#include "BinTree.hpp"
 
 #define MAX_BLOC 65536
 #define ELEMENTS_HUFFMAN 257
 
-FILE * fitxerSortida; // Fitxer de sortida a disc.
-uint8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
-uint8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
-int bitsActualsBloc; // Nombre de bits escrits al byteActualBloc.
-int bitsActualsDisc; // Nombre de bits escrits al byteActualDisc.
-uint32_t midaBloc; // Nombre de bytes enviats al bloc.
-uint8_t * bloc = new uint8_t[MAX_BLOC]; // Bloc on desem els bits jacodificats de forma propietària abans de ser codificats amb Huffman.
+class CompressorPrac{
+    public:
+        void comprimeix (char * paramEntrada, char * paramSortida);
+    private:
+        FILE * fitxerSortida; // Fitxer de sortida a disc.
+        uint8_t byteActualBloc; // Byte codificat amn l'algorisme propietarique s'envia al Huffman.
+        uint8_t byteActualDisc; // Byte codificat en huffman que enviem a disc.
+        int bitsActualsBloc; // Nombre de bits escrits al byteActualBloc.
+        int bitsActualsDisc; // Nombre de bits escrits al byteActualDisc.
+        uint32_t midaBloc; // Nombre de bytes enviats al bloc.
+        uint8_t bloc [MAX_BLOC]; // Bloc on desem els bits jacodificats de forma propietària abans de ser codificats amb Huffman.
+        void byteAlDisc(const uint8_t nouByte);
+        void flushDisc();
+        void bitAlDisc(const bool bit);
+        void bitsAlDisc(unsigned long bits, int quantitat);
+        void longitudArbreIntern(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud);
+        void longitudArbre(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi);
+        void blocAHuffman();
+        void byteAlBloc(const uint8_t nouByte);
+        void bitAlBloc(const bool bit);
+        void bitsAlBloc(unsigned long bits, int quantitat);
+        void negatiusAlBloc(int & quantitat);
+        void eolAlBloc();
+        void literalAlBloc(const long literal);
+        void diferenciaAlBloc(const long nou, const long antic);
+        void endOfFile();
+        long properNumero(std::string const& entrada, long & index);
+};
+
+
 
 // Escriu nouByte a disc.
-void byteAlDisc(const uint8_t nouByte){
+void CompressorPrac::byteAlDisc(const uint8_t nouByte){
     fwrite( & nouByte , sizeof(uint8_t), 1, fitxerSortida);
 }
 
 // Termina d'escriure a disc qualsevol bit que encara no s'haguès escrit
 // en un octet sencer i tanca la sortida.
-void flushDisc(){
+void CompressorPrac::flushDisc(){
     if (bitsActualsDisc){
         byteActualDisc <<= (8 - bitsActualsDisc);
         byteAlDisc(byteActualDisc);
@@ -39,7 +65,7 @@ void flushDisc(){
 // Internament, ho afegeix a byteActualDisc, i incrementa bitsActualsDisc.
 // Cada 8 iteracions, s'envia byteActualDisc al disc, i reinicialitza
 // byteActualDisc i bitsActualsDisc a 0.
-void bitAlDisc(const bool bit){
+void CompressorPrac::bitAlDisc(const bool bit){
     byteActualDisc <<= 1;
     ++bitsActualsDisc;
     if (bit) ++byteActualDisc;
@@ -53,7 +79,7 @@ void bitAlDisc(const bool bit){
 // Demana escriure a disc quantitat bits de menys pes de bits.
 // S'envien de bit de més pes a bit de menys pes.
 // Funcionament no definit per a quantitat > (sizeof(unsigned long) * 8).
-void bitsAlDisc(unsigned long bits, int quantitat){
+void CompressorPrac::bitsAlDisc(unsigned long bits, int quantitat){
     while (quantitat--){
         bitAlDisc(bits & (1 << quantitat) );
     }
@@ -95,7 +121,7 @@ o acabar a qualsevol posició dins un byte, no està confinat a ocupar un nombre
 
 
 // Funció interna recursiva de longitudArbre.
-void longitudArbreIntern(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
+void CompressorPrac::longitudArbreIntern(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi, int longitud){
     if (arbre.left().empty()){
         longitudsCodi[arbre.value()] = longitud;
     }
@@ -107,12 +133,12 @@ void longitudArbreIntern(const BinTree<uint16_t> & arbre, std::vector <int> & lo
 
 // Funció que calcula la longitud del codi per a tots els elements de arbre, i les introdueix a longitudsCodi.
 // Requereix que longitudsCodi tingui com a mínim longitud >= nombre de fulles de arbre.
-void longitudArbre(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi){
+void CompressorPrac::longitudArbre(const BinTree<uint16_t> & arbre, std::vector <int> & longitudsCodi){
     longitudArbreIntern(arbre, longitudsCodi, 0);
 }
 
 // Genera els codis de Huffman pertinents al bloc i escriu a disc el bloc codificat.
-void blocAHuffman(){
+void CompressorPrac::blocAHuffman(){
     // Generar arbre per primer cop
     // L'arbre es genera amb el símbol adicional 257 que representa fi de bloc.
     // L'arbre quedarà a iterador->second.
@@ -210,7 +236,7 @@ void blocAHuffman(){
 // Afegeix nouByte al bloc.
 // Cada cop que s'omple el bloc, es codifica amb huffman,
 // s'escriu a disc i es buida.
-void byteAlBloc(const uint8_t nouByte){
+void CompressorPrac::byteAlBloc(const uint8_t nouByte){
     bloc[midaBloc++] = nouByte;
 
     if (midaBloc == MAX_BLOC){
@@ -224,7 +250,7 @@ void byteAlBloc(const uint8_t nouByte){
 // Internament, ho afegeix a byteActualBloc, i incrementa bitsActualsBloc.
 // Cada 8 iteracions, s'envia byteActualBloc al bloc, i reinicialitza
 // byteActualBloc i bitsActualsBloc a 0.
-void bitAlBloc(const bool bit){
+void CompressorPrac::bitAlBloc(const bool bit){
     byteActualBloc <<= 1;
     ++bitsActualsBloc;
     if (bit) ++byteActualBloc;
@@ -238,7 +264,7 @@ void bitAlBloc(const bool bit){
 // Envia al bloc els quantitat bits de menys pes de bits.
 // S'envien de bit de més pes a bit de menys pes.
 // Funcionament no definit per a quantitat > (sizeof(unsigned long) * 8).
-void bitsAlBloc(unsigned long bits, int quantitat){
+void CompressorPrac::bitsAlBloc(unsigned long bits, int quantitat){
     while (quantitat--){
         bitAlBloc(bits & (1 << quantitat) );
     }
@@ -248,7 +274,7 @@ void bitsAlBloc(unsigned long bits, int quantitat){
 // Si quantitat és 0, no fa res.
 // S'envia 0b111 + (quantitat - 1) (10 bits).
 // S'actualitza el valor de quantita a 0. 
-void negatiusAlBloc(int & quantitat){
+void CompressorPrac::negatiusAlBloc(int & quantitat){
     if (!quantitat) return;
     bitsAlBloc(0b111, 3);
     bitsAlBloc(quantitat - 1, 10);
@@ -257,13 +283,13 @@ void negatiusAlBloc(int & quantitat){
 
 // Envia al bloc el codi de fi de línia (EOL).
 // S'envia 0b1101.
-void eolAlBloc(){
+void CompressorPrac::eolAlBloc(){
     bitsAlBloc(0b1101, 4);
 }
 
 // Envia al bloc un número natural.
 // S'envia 0b1100 + literal (31 bits).
-void literalAlBloc(const long literal){
+void CompressorPrac::literalAlBloc(const long literal){
     bitsAlBloc(0b1100, 4);
     bitsAlBloc(literal, 31);
 }
@@ -277,7 +303,7 @@ void literalAlBloc(const long literal){
 //  - les diferències s'envien en format Signe-Magnitud.
 //
 // En cas de diferir per 4269 o més, s'escriu el literal.
-void diferenciaAlBloc(const long nou, const long antic){
+void CompressorPrac::diferenciaAlBloc(const long nou, const long antic){
     long diferencia = nou - antic;
     if (diferencia == 0){
         bitsAlBloc(0b10, 2);
@@ -309,7 +335,7 @@ void diferenciaAlBloc(const long nou, const long antic){
 // força la compressió huffman i escriptura del bloc actual,
 // escriu a disc els 13 bits a 0 corresponent a un EOF,
 // i finalment mana escriure el búfer a disc i tancar el fitxer.
-void endOfFile(){
+void CompressorPrac::endOfFile(){
     if (bitsActualsBloc){
         byteActualBloc <<= (8 - bitsActualsBloc);
         byteAlBloc(byteActualBloc);
@@ -323,7 +349,7 @@ void endOfFile(){
 // Itera pel string entrada, a partir de la posició index fins que
 // troba un número natural o un -1.
 // Retorna el número trobat, i actualitza index apuntant després d'aquest.
-long properNumero(std::string const& entrada, long & index){
+long CompressorPrac::properNumero(std::string const& entrada, long & index){
     long numActual = 0;
     bool negatiu = false;
     while (!((entrada[index] >= '0' && entrada[index] <= '9') || entrada[index] == '-')) ++index;
@@ -378,23 +404,17 @@ Algorisme de compresió, fase 1 (després rep un huffman).
                └─ Escrivim 0b1100 + el literal sense signe amb 31 bits.
 */
 
-int main (int argc, char ** argv){
+void CompressorPrac::comprimeix (char * paramEntrada, char * paramSortida){
 
     // Comprovació dels paràmetres d'entrada.
 
-    if (argc != 3){
-        std::string misError (argv[0]);
-        std::cerr << "Arguments incorrectes.\nUs: " + misError + " entrada.txt sortida.knk" << std::endl;
-        exit(1);
-    }
-
-    if (strcmp(argv[1], argv[2]) == 0){
+    if (strcmp(paramEntrada, paramSortida) == 0){
         std::cerr << "Mateix argument d'entrada que de sortida." << std::endl;
         exit(1);
     }
 
     // Preparem fitxer d'entrada.
-    std::ifstream fitxerEntrada(argv[1]);
+    std::ifstream fitxerEntrada(paramEntrada);
 
     if (!fitxerEntrada){
         perror("Error obrint fitxer d'entrada");
@@ -402,7 +422,7 @@ int main (int argc, char ** argv){
     }
 
     // Preparem fitxer d'escriptura.
-    fitxerSortida = fopen (argv[2], "w");
+    fitxerSortida = fopen (paramSortida, "w");
 
     if (!fitxerSortida){
         perror("Error obrint fitxer de sortida");
@@ -474,3 +494,5 @@ int main (int argc, char ** argv){
     // Escriu EOF a disc, i finalitza les escriptures del bloc a disc.
     endOfFile();
 }
+
+#endif
