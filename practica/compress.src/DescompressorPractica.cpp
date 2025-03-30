@@ -275,7 +275,7 @@ void DescompressorPrac::descomprimeix (char * paramEntrada, char * paramSortida)
                     // -1's
                     // 0b111
                     bool fiDeFitxer;
-                    unsigned long iteracions = llegeixBitsDelBloc(10, fiDeFitxer);
+                    unsigned long iteracions = llegeixBitsDelBloc(13, fiDeFitxer);
                     if (fiDeFitxer) break;
                     if (!primersSimbolLinia) fitxerSortida << " ";
                     fitxerSortida << "-1";
