@@ -272,12 +272,12 @@ void CompressorPrac::bitsAlBloc(unsigned long bits, int quantitat){
 
 // Envia al bloc el nombre de negatius seguits trobats.
 // Si quantitat és 0, no fa res.
-// S'envia 0b111 + (quantitat - 1) (10 bits).
+// S'envia 0b111 + (quantitat - 1) (13 bits).
 // S'actualitza el valor de quantita a 0. 
 void CompressorPrac::negatiusAlBloc(int & quantitat){
     if (!quantitat) return;
     bitsAlBloc(0b111, 3);
-    bitsAlBloc(quantitat - 1, 10);
+    bitsAlBloc(quantitat - 1, 13);
     quantitat = 0;
 }
 
@@ -371,8 +371,8 @@ long CompressorPrac::properNumero(std::string const& entrada, long & index){
 Algorisme de compresió, fase 1 (després rep un huffman).
 └─ Llegim número.
    ├─ És -1.
-   │  └─ Prenem compte de quants -1 hem trobat seguits (fins a 1024).
-   │     └─ Escrivim 0b111 + el número de "-1" seguits trobats menys u; amb 10 bits.
+   │  └─ Prenem compte de quants -1 hem trobat seguits (fins a 8192).
+   │     └─ Escrivim 0b111 + el número de "-1" seguits trobats menys u; amb 13 bits.
    │
    ├─ És fi de línia.
    │  ├─ Escrivim 0b1101.
@@ -458,10 +458,10 @@ void CompressorPrac::comprimeix (char * paramEntrada, char * paramSortida){
                 // Només incrementem comptador.
                 ++comptadorNegs;
 
-                if (comptadorNegs == 1024) {
-                    // En cas de portar 1024 negatius seguits, els escrivim
+                if (comptadorNegs == 8192) {
+                    // En cas de portar 8192 negatius seguits, els escrivim
                     // i tornem a posar el comptador a 0.
-                    // Això es deu a que els -1 es comuniquen amb 10 bits.
+                    // Això es deu a que els -1 es comuniquen amb 13 bits.
                     negatiusAlBloc(comptadorNegs);
                 }
             }
