@@ -2,6 +2,7 @@
 #define COMPRESSOR_PRAC_H
 
 #include "BinTree.hpp"
+#include <bit>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -251,6 +252,24 @@ void CompressorPrac::byteAlBloc(const uint8_t nouByte){
 // Cada 8 iteracions, s'envia byteActualBloc al bloc, i reinicialitza
 // byteActualBloc i bitsActualsBloc a 0.
 void CompressorPrac::bitAlBloc(const bool bit){
+    static std::optional<bool> bitActual;
+    static int seguits = 0;
+    if (! bitActual) {
+        bitAlDisc(bit);
+        bitActual = bit;
+    }
+    if (bitActual.value() != bit){
+        //flush
+        for (int i = 0; i < std::__bit_width(seguits) - 1; ++i) bitAlDisc(false);
+        bitAlDisc(true);
+        bitsAlDisc( seguits - ( 1 << (std::__bit_width(seguits) - 1)) ,std::__bit_width(seguits) - 1);
+        seguits = 1;
+        bitActual = bit;
+    }
+    else{
+        ++seguits;
+    }
+    /*
     byteActualBloc <<= 1;
     ++bitsActualsBloc;
     if (bit) ++byteActualBloc;
@@ -259,6 +278,7 @@ void CompressorPrac::bitAlBloc(const bool bit){
         byteActualBloc = 0;
         bitsActualsBloc = 0;
     }
+        */
 }
 
 // Envia al bloc els quantitat bits de menys pes de bits.
