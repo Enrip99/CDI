@@ -404,6 +404,10 @@ Algorisme de compresió, fase 1 (després rep un huffman).
                └─ Escrivim 0b1100 + el literal sense signe amb 31 bits.
 */
 
+// Funció principal del compressor.
+// Rep dos camins a dos fitxers, entrada i sortida,
+// i comprimeix el fitxer que hi ha a paramEntrada
+// i el desa a paramSortida.
 void CompressorPrac::comprimeix (char * paramEntrada, char * paramSortida){
 
     // Comprovació dels paràmetres d'entrada.
