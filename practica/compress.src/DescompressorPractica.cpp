@@ -82,8 +82,7 @@ void DescompressorPrac::llegeixArbre(const BinTree<int> & arbre, std::string cod
 bool DescompressorPrac::llegeixBlocDeDisc(){
 
     std::vector <int> arbreLong (ELEMENTS_HUFFMAN, 0), bl_count (ELEMENTS_HUFFMAN, 0);
-    std::vector <unsigned long> /*arbreCodi (ELEMENTS_HUFFMAN, 0),*/ properCodi (ELEMENTS_HUFFMAN, 0);
-    //std::map <std::pair<unsigned long, int>, int> mapaCodi;
+    std::vector <unsigned long> properCodi (ELEMENTS_HUFFMAN, 0);
     std::map <std::pair<unsigned long, int>, BinTree<int>> mapaCodi;
     BinTree<int> arbreIterar;
 
@@ -91,6 +90,7 @@ bool DescompressorPrac::llegeixBlocDeDisc(){
     // bl_count := nombre de bytes amb codi mida N
     // mapaCodi := codi real de cada byte <--
     // properCodi := variable auxiliar
+    // arbreIterar := variable on desem l'arrel de l'arbre
 
     // Obtenim les longituds de codi per poder refer l'arbre
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
@@ -116,7 +116,8 @@ bool DescompressorPrac::llegeixBlocDeDisc(){
         properCodi[i] = codi;
     }
 
-    // Per a cada símbol, li asignem el seu codi de forma numèrica.
+    // Per a cada símbol, li asignem el seu codi de forma numèrica
+    // i el desem a un mapa ordenat per longitud de codi, seguit del propi codi.
     // codi = codi mínim per a la longitud del codi del símbol
     //        + nombre de cops que s'ha asignat ja un codi d'aqusta mida
     for (int i = 0; i < ELEMENTS_HUFFMAN; ++i){
@@ -127,6 +128,11 @@ bool DescompressorPrac::llegeixBlocDeDisc(){
         }
     }
     
+    // Generació de l'arbre de Huffman
+    // Agrupem de dos en dos sota un mateix pare els dos últims elements del mapa,
+    // i afegim el pare de nou al mapa.
+    // Com que el mapa s'ordena sol, quan resti un sol element, aquest serà l'arrel
+    // de l'arbre sencer.
     while(mapaCodi.size() > 1){
         auto it = mapaCodi.end();
         --it;
@@ -138,10 +144,12 @@ bool DescompressorPrac::llegeixBlocDeDisc(){
         mapaCodi.erase(it);
     }
     
+    // Llegim bits un a un de disc i travessem l'arbre reiteradament mentre emplenem el bloc.
+    // Iterem indefinidament fins que trobem l'element de fi de bloc.
     arbreIterar = mapaCodi.begin()->second;
     midaBloc = 0;
     while (1){
-        if (arbreIterar.value() == ELEMENTS_HUFFMAN - 1) break;
+        if (arbreIterar.value() == ELEMENTS_HUFFMAN - 1) return true;
         else if (arbreIterar.value() == -1){
             llegeixBitDeDisc() ? arbreIterar = arbreIterar.right() : arbreIterar = arbreIterar.left();
         }
@@ -150,7 +158,6 @@ bool DescompressorPrac::llegeixBlocDeDisc(){
             arbreIterar = mapaCodi.begin()->second;
         }
     }
-    return true;
 }
 
 // Actualitza byteActualBloc amb el següent byte al bloc
@@ -199,7 +206,10 @@ unsigned long DescompressorPrac::llegeixBitsDelBloc(int quantitat, bool & fiDeFi
 }
 
 
-
+// Funció principal del descompressor.
+// Rep dos camins a dos fitxers, entrada i sortida,
+// i descomprimeix el fitxer que hi ha a paramEntrada
+// i el desa a paramSortida.
 void DescompressorPrac::descomprimeix (char * paramEntrada, char * paramSortida){
 
     // Comprovació dels paràmetres d'entrada.
@@ -288,7 +298,11 @@ void DescompressorPrac::descomprimeix (char * paramEntrada, char * paramSortida)
             // increment/decrement
             // 0b0
             long increment, bitsALlegir = 4, suma = 1;
-            bool fiDeFitxer, signe = false; //per defecte, asumim positiu.
+            bool fiDeFitxer, signe;
+            // per defecte, asumim que hem de llegir 4 bits pel valor absolut
+            // i haurem de sumar 1 al valor absolut. Si el següent bit és 1,
+            // vol dir que hem de llegir 8 o 12, i la suma serà 17 o 273,
+            // depenent de si el següent a aquest és 0 o 1.
             res = llegeixBitDelBloc();
             if (res < 0) break;
             if (res > 0){
@@ -303,6 +317,7 @@ void DescompressorPrac::descomprimeix (char * paramEntrada, char * paramSortida)
                     suma = 273;
                 }
             }
+            // llegim el signe de la diferència
             res = llegeixBitDelBloc();
             if (res < 0) break;
             signe = res;
