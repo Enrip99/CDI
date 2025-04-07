@@ -1,5 +1,5 @@
 CC=g++
-CXXFLAGS=-std=c++20 -O3
+CXXFLAGS=-std=c++17 -O3
 
 default: compress.src/main.cpp compress.src/CompressorPractica.cpp compress.src/DescompressorPractica.cpp compress.src/BinTree.hpp
 	$(CC) $(CXXFLAGS) -o compress.cdi compress.src/main.cpp
