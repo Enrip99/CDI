@@ -8,9 +8,9 @@
 
 unsigned char * bufer_entrada;
 
-unsigned char agafa_bits(int quantitat){
+unsigned int agafa_bits(int quantitat){
     static int posicio = 0, bit = 0;
-    unsigned char resultat = 0;
+    unsigned int resultat = 0;
     while (quantitat--){
         resultat <<= 1;
         if (bufer_entrada[posicio] & (1 << (7 - bit++))) ++resultat;
@@ -22,7 +22,14 @@ unsigned char agafa_bits(int quantitat){
     return resultat;
 }
 
+unsigned int bitsPerRepresentar(int input){
+    unsigned int target = 0;
+    while (input >>= 1) ++target;
+    return target + 1;
+}
+
 int main (int argc, char ** argv){
+
     if (argc != 3) return -1;
     int fitxer_entrada, fitxer_sortida;
     fitxer_entrada = open(argv[1], O_RDONLY);
@@ -32,39 +39,36 @@ int main (int argc, char ** argv){
 
     int resultat;
     
-    unsigned char opcions [6];
+    unsigned char opcions [7];
 
-    resultat = read(fitxer_entrada, opcions, 6);
+    resultat = read(fitxer_entrada, opcions, 7);
     if (resultat == -1) return -1;
+
 
     unsigned long n = opcions[0] << 8 | opcions[1]; //fileres
     unsigned long m = opcions[2] << 8 | opcions[3]; //columnes
     unsigned char n_b = opcions[4]; //mida de les fileres i columnes dels blocs
-    unsigned char b = opcions[5]; //bits per pixel del bloc
-    unsigned char imatge [n][m];//imatge final
+    unsigned long e = opcions[5] << 8 | opcions[6]; //nombre d'entrades al diccionari
+    unsigned char imatge [n][m];
     unsigned long fileres_de_blocs = n / n_b;
     unsigned long columnes_de_blocs = m / n_b;
+    unsigned int mida_index = bitsPerRepresentar(e);
     unsigned int num_blocs = fileres_de_blocs * columnes_de_blocs; //numero de blocs
-    unsigned int mida_bloc = n_b * n_b * b; //Nombre de bits en un bloc
-    unsigned int nivells = 1 << b; //Nombre de valors diferents que pot tenir un pixel d'un bloc
-    unsigned int bytes_totals = (16 * num_blocs) + ((mida_bloc * n_b * num_blocs)/8);
+    unsigned char diccionari [e][n_b][n_b];
+    unsigned int bytes_totals = ((mida_index * num_blocs)/8) + (((mida_index * num_blocs) % 8) != 0);
+
+    resultat = read(fitxer_entrada, & diccionari, e * n_b * n_b);
+    if (resultat == -1) return -1;
 
     bufer_entrada = (unsigned char *) malloc(bytes_totals);
     resultat = read(fitxer_entrada, bufer_entrada, bytes_totals);
     if (resultat == -1) return -1;
 
-    std::vector <unsigned char> escales (nivells);
-
     for (int i = 0; i < num_blocs; ++i){
         int fil = (i % columnes_de_blocs) * n_b;
         int col = (i / columnes_de_blocs) * n_b;
-        unsigned int min = agafa_bits(8);
-        unsigned int max = agafa_bits(8);
-        float escala = (max - min) / nivells;
-        for (int j = 0; j < nivells; ++j) escales [j] = min + (escala * j) + (escala / 2);
-        
-        for (int j = 0; j < n_b; ++j) for (int k = 0; k < n_b; ++k) imatge[col+j][fil+k] = escales [agafa_bits(b)];
-
+        unsigned int index = agafa_bits(mida_index);
+        for (int j = 0; j < n_b; ++j) for (int k = 0; k < n_b; ++k) imatge[col+j][fil+k] = diccionari[index][j][k];
     }
 
     char preamble [256];
